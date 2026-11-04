@@ -53,6 +53,8 @@ public class MainActivity extends Activity {
     private WebView web;
     private TextToSpeech tts;
     private volatile boolean ttsReady = false;
+    private volatile float voicePitch = 1.35f;
+    private volatile float voiceRate = 0.95f;
     private File pendingFile;
     private OutputStream pendingOut;
     private String pendingName = "worksheet.pdf";
@@ -140,8 +142,16 @@ public class MainActivity extends Activity {
             if ("fil".equals(lang) && (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED)) {
                 tts.setLanguage(new Locale("tl", "PH"));
             }
-            tts.setSpeechRate(0.9f);
+            tts.setPitch(voicePitch);
+            tts.setSpeechRate(voiceRate);
             tts.speak(text, TextToSpeech.QUEUE_ADD, null, "tuldok-" + System.nanoTime());
+        }
+
+        /** Pitch above 1.0 sounds brighter and friendlier to young children. */
+        @JavascriptInterface
+        public void setVoice(float pitch, float rate) {
+            voicePitch = Math.max(0.5f, Math.min(2.0f, pitch));
+            voiceRate = Math.max(0.5f, Math.min(1.5f, rate));
         }
 
         @JavascriptInterface

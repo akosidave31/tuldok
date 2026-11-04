@@ -183,6 +183,8 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
     <div class="row"><span class="lab">Language</span><div id="setLang" class="seg"></div></div>
     <div class="row"><span class="lab">Sounds</span><div id="setSound" class="seg"></div></div>
     <div class="row"><span class="lab">Voice (reads instructions aloud)</span><div id="setVoice" class="seg"></div></div>
+    <div class="row"><span class="lab">Voice language</span><div id="setVoiceLang" class="seg"></div></div>
+    <div class="row"><span class="lab">Voice style</span><div id="setVoiceStyle" class="seg"></div></div>
     <button id="toPrint" class="wide" type="button">🖨️ Printable worksheets (PDF)</button>
     <button id="resetStars" class="wide" type="button">Reset stars</button>
     <p class="note">The tracing games check that children start at the green dot and follow the arrow, the way letters are taught in class. Nursery gets wider paths and big letters only.</p>
@@ -219,9 +221,11 @@ const CRAYON = ['#ef476f', '#f78c1f', '#06d6a0', '#118ab2', '#8e5cd9', '#ff70a6'
 /* ================= settings and stars ================= */
 function load(k, d) { try { const v = localStorage.getItem('tuldok-play-' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } }
 function save(k, v) { try { localStorage.setItem('tuldok-play-' + k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
-const S = { age: load('age', 'prek'), lang: load('lang', 'both'), sound: load('sound', true), voice: load('voice', true) };
+const S = { age: load('age', 'prek'), lang: load('lang', 'both'), sound: load('sound', true), voice: load('voice', true), voiceLang: load('voiceLang', 'en'), voiceStyle: load('voiceStyle', 'jolly') };
 if (['nursery', 'prek', 'kinder'].indexOf(S.age) < 0) S.age = 'prek';
 if (['en', 'fil', 'both'].indexOf(S.lang) < 0) S.lang = 'both';
+if (['en', 'fil', 'both'].indexOf(S.voiceLang) < 0) S.voiceLang = 'en';
+if (['jolly', 'calm'].indexOf(S.voiceStyle) < 0) S.voiceStyle = 'jolly';
 let stars = load('stars', {});
 if (!stars || typeof stars !== 'object') stars = {};
 const tr = function (en, fil) { return S.lang === 'fil' ? fil : en; };
@@ -258,25 +262,26 @@ const sfx = {
 document.addEventListener('pointerdown', function () { audio(); }, { once: true });
 
 /* ================= voice: Android text-to-speech in the app, browser speech elsewhere ================= */
+const VOICE = { jolly: { pitch: 1.35, rate: 0.95 }, calm: { pitch: 1.0, rate: 0.85 } };
 function speak(parts) {
   if (!S.voice || !parts.length) return;
   const A = window.TuldokAndroid;
   if (A && typeof A.speak === 'function') {
-    try { if (typeof A.stopSpeaking === 'function') A.stopSpeaking(); parts.forEach(function (p) { A.speak(p[0], p[1]); }); } catch (e) { /* voice is optional */ }
+    try { if (typeof A.stopSpeaking === 'function') A.stopSpeaking(); if (typeof A.setVoice === 'function') A.setVoice(VOICE[S.voiceStyle].pitch, VOICE[S.voiceStyle].rate); parts.forEach(function (p) { A.speak(p[0], p[1]); }); } catch (e) { /* voice is optional */ }
     return;
   }
   if (!('speechSynthesis' in window)) return;
   try {
     window.speechSynthesis.cancel();
-    parts.forEach(function (p) { const u = new SpeechSynthesisUtterance(p[0]); u.lang = p[1] === 'fil' ? 'fil-PH' : 'en-US'; u.rate = 0.92; window.speechSynthesis.speak(u); });
+    parts.forEach(function (p) { const u = new SpeechSynthesisUtterance(p[0]); u.lang = p[1] === 'fil' ? 'fil-PH' : 'en-US'; u.rate = VOICE[S.voiceStyle].rate; u.pitch = VOICE[S.voiceStyle].pitch; window.speechSynthesis.speak(u); });
   } catch (e) { /* voice is optional */ }
 }
 function stopVoice() {
   const A = window.TuldokAndroid;
   try { if (A && typeof A.stopSpeaking === 'function') A.stopSpeaking(); else if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) { /* ignore */ }
 }
-function say(en, fil) { const p = []; if (S.lang !== 'fil' && en) p.push([en, 'en']); if (S.lang !== 'en' && fil) p.push([fil, 'fil']); speak(p); }
-function sayOne(en, fil) { if (S.lang === 'fil') speak([[fil, 'fil']]); else speak([[en, 'en']]); }
+function say(en, fil) { const p = []; if (S.voiceLang !== 'fil' && en) p.push([en, 'en']); if (S.voiceLang !== 'en' && fil) p.push([fil, 'fil']); speak(p); }
+function sayOne(en, fil) { if (S.voiceLang === 'fil') speak([[fil, 'fil']]); else speak([[en, 'en']]); }
 
 /* ================= stroke font =================
    Ball-and-stick letters, one string per pen stroke in teaching order.
@@ -404,7 +409,7 @@ const LINE_SET = [
 const SHAPE_SET = [['circle', 'circle', 'bilog'], ['square', 'square', 'parisukat'], ['triangle', 'triangle', 'tatsulok'], ['rectangle', 'rectangle', 'parihaba'], ['star', 'star', 'bituin'], ['oval', 'oval', 'biluhaba'], ['heart', 'heart', 'puso'], ['diamond', 'diamond', 'diyamante']];
 const PATTERNS = { AB: [0, 1], AAB: [0, 0, 1], ABB: [0, 1, 1], ABC: [0, 1, 2], AABB: [0, 0, 1, 1] };
 const PAT_BY_AGE = { nursery: ['AB'], prek: ['AB', 'AAB', 'ABB'], kinder: ['AB', 'AAB', 'ABB', 'ABC', 'AABB'] };
-const PRAISE = [['Great job!', 'Magaling!'], ['You did it!', 'Nagawa mo!'], ['Awesome!', 'Ang galing mo!'], ['Well done!', 'Mahusay!']];
+const PRAISE = [['Yay! Great job!', 'Yehey! Magaling!'], ['Woohoo! You did it!', 'Yehey! Nagawa mo!'], ['Wow! Awesome!', 'Wow! Ang galing mo!'], ['Super duper!', 'Ang husay mo!']];
 
 function letterKeys(L, kase) { if (L === 'NG') return kase === 'upper' ? ['N', 'G'] : ['n', 'g']; return [kase === 'upper' ? L : L.toLowerCase()]; }
 function cueList(L) {
@@ -417,18 +422,18 @@ function letterItems() {
   const out = [], list = S.lang === 'en' ? ALPHA_EN : ALPHA_FIL;
   list.forEach(function (L) {
     const en = CUE.en[L], fil = CUE.fil[L], cues = cueList(L);
-    const cueEn = en ? ' ' + L + ' is for ' + en[1] + '.' : '', cueFil = fil ? ' ' + L + ', ' + fil[1] + '.' : '';
-    out.push({ type: 'glyph', keys: letterKeys(L, 'upper'), L: L, cue: cues, title: L, say: ['Trace the big letter ' + L + '.' + cueEn, 'Bakatin ang malaking titik ' + L + '.' + cueFil] });
+    const cueEn = en ? ' ' + L + ' is for ' + en[1] + '!' : '', cueFil = fil ? ' ' + L + ', ' + fil[1] + '!' : '';
+    out.push({ type: 'glyph', keys: letterKeys(L, 'upper'), L: L, cue: cues, title: L, say: ["Let's trace big letter " + L + '!' + cueEn, 'Tara, bakatin natin ang malaking titik ' + L + '!' + cueFil] });
     if (S.age !== 'nursery') {
       const lo = L === 'NG' ? 'ng' : L.toLowerCase();
-      out.push({ type: 'glyph', keys: letterKeys(L, 'lower'), L: L, cue: cues, title: lo, say: ['Trace the small letter ' + L + '.', 'Bakatin ang maliit na titik ' + L + '.'] });
+      out.push({ type: 'glyph', keys: letterKeys(L, 'lower'), L: L, cue: cues, title: lo, say: ['Now the small letter ' + L + '!', 'Ngayon, ang maliit na titik ' + L + '!'] });
     }
   });
   return out;
 }
 function numberItems() {
   const r = { nursery: [1, 5], prek: [1, 10], kinder: [0, 20] }[S.age], out = [];
-  for (let n = r[0]; n <= r[1]; n++) out.push({ type: 'glyph', keys: String(n).split(''), num: n, title: String(n), say: ['Trace the number ' + NUM_EN[n] + '.', 'Bakatin ang bilang ' + NUM_FIL[n] + '.'] });
+  for (let n = r[0]; n <= r[1]; n++) out.push({ type: 'glyph', keys: String(n).split(''), num: n, title: String(n), say: ["Let's trace the number " + NUM_EN[n] + '!', 'Tara, bakatin natin ang bilang ' + NUM_FIL[n] + '!'] });
   return out;
 }
 function lineItems() {
@@ -1082,7 +1087,7 @@ function patternRound() {
   dom.appendChild(q); dom.appendChild(row); dom.appendChild(ch);
   GAME.fit = function () { row.style.setProperty('--sz', Math.floor(Math.max(46, Math.min(130, (W - 40) / (shown + 1) - 14, H * 0.26))) + 'px'); };
   GAME.fit();
-  const names = seq.slice(0, shown).map(function (i) { return S.lang === 'fil' ? things[i][2] : things[i][1]; }).join(', ');
+  const names = seq.slice(0, shown).map(function (i) { return S.voiceLang === 'fil' ? things[i][2] : things[i][1]; }).join(', ');
   GAME.say = function () { sayOne(names + '. What comes next?', names + '. Ano ang susunod?'); };
   GAME.say();
 }
@@ -1191,6 +1196,8 @@ function openGrown() {
   seg('setLang', [['en', 'English'], ['fil', 'Filipino'], ['both', 'Both']], function () { return S.lang; }, function (v) { S.lang = v; save('lang', v); });
   seg('setSound', [[true, 'On'], [false, 'Off']], function () { return S.sound; }, function (v) { S.sound = v; save('sound', v); });
   seg('setVoice', [[true, 'On'], [false, 'Off']], function () { return S.voice; }, function (v) { S.voice = v; save('voice', v); if (!v) stopVoice(); });
+  seg('setVoiceLang', [['en', 'English'], ['fil', 'Filipino'], ['both', 'Both']], function () { return S.voiceLang; }, function (v) { S.voiceLang = v; save('voiceLang', v); sayOne("Hi! Let's play!", 'Hello! Maglaro tayo!'); });
+  seg('setVoiceStyle', [['jolly', 'Jolly'], ['calm', 'Calm']], function () { return S.voiceStyle; }, function (v) { S.voiceStyle = v; save('voiceStyle', v); sayOne("Hi! Let's play!", 'Hello! Maglaro tayo!'); });
   $('resetStars').textContent = 'Reset stars';
   $('grown').hidden = false;
 }
