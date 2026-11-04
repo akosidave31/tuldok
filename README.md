@@ -30,12 +30,15 @@ Open that link on the phone or tablet, download, and install. If the repo is pri
 ```
 app/src/main/assets/index.html          touch games (all game logic and drawing)
 app/src/main/assets/print.html          printable worksheet maker
+app/src/main/assets/voice/              recorded voice clips + manifest.js (made by tools/make_voice.py)
 app/src/main/java/ph/tuldok/app/        MainActivity: WebView, voice, save/print/share
+tools/make_voice.py                     Google Colab script that records every app line with Chatterbox
+tools/tuldok_voice.ipynb                the same script as a ready-to-run Colab notebook
 .github/workflows/build-apk.yml         builds, signs and publishes the APK
 ```
 
 ## Notes
 
-- **Voice.** Many speech engines ignore pitch settings, so the app renders each line to a sound file with the device's text-to-speech engine and plays it back at a higher pitch. "Jolly" raises the pitch; "Calm" plays it as is.
+- **Voice.** "Happy teacher" plays recorded clips made once in Google Colab with [Chatterbox](https://github.com/resemble-ai/chatterbox) (MIT License; clips carry Resemble AI's inaudible watermark). Its exaggeration setting gives the lines real feeling. To make the clips, open [tools/tuldok_voice.ipynb in Colab](https://colab.research.google.com/github/akosidave31/tuldok/blob/main/tools/tuldok_voice.ipynb) and follow its steps. A line without a clip, and the "Calm" style, use the tablet's own speech engine, rendered to a sound file and played back at a set pitch, because many engines ignore pitch settings. If you add or change a spoken line in `index.html`, add it to `all_lines()` in `tools/make_voice.py` and run the script again; the grown-ups menu lists lines that have no clip.
 - **Signing.** The first build creates a test key and keeps it on a pre-release named `signing-key`, so later builds can update the installed app. Anyone who can see the repo can download that key. Before giving the app to schools, switch to a release key stored in GitHub Secrets.
 - **Fonts.** Titles use Google Fonts when online and the device font offline. Traced letters are drawn by the app, so they look the same either way.

@@ -190,6 +190,8 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 </div>
 <div id="err" class="err" hidden></div>
 
+<!-- Recorded voice clips (made in Colab by tools/make_voice.py). Missing file = device voice is used. -->
+<script src="voice/manifest.js"></script>
 <script>
 (function () {
 'use strict';
@@ -256,11 +258,44 @@ const sfx = {
 document.addEventListener('pointerdown', function () { audio(); }, { once: true });
 
 /* ================= voice =================
-   In the app, Android reads the line into a sound file and plays it back with a raised pitch (works with any speech engine).
-   In a browser, the built-in speech voice is used. */
+   "Happy teacher" plays recorded clips from voice/ (made once in Colab with the Chatterbox voice model,
+   see tools/make_voice.py). Each line is looked up by its words, ignoring case and punctuation.
+   A line with no clip, and the "Calm" style, use the device voice instead:
+   in the app, Android reads the line into a sound file and plays it back with a raised pitch;
+   in a browser, the built-in speech voice is used. */
 const VOICE = { jolly: { pitch: 1.4, rate: 0.95 }, calm: { pitch: 1.0, rate: 0.85 } };
-function say(text) {
-  if (!S.voice || !text) return;
+const CLIPS = (window.TULDOK_VOICE && window.TULDOK_VOICE.clips) || null;
+const missingClips = [];
+function vkey(t) { return String(t).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
+let clipEl = null, clipGen = 0;
+function say(text) { sayParts([text]); }
+/* Say several short lines back to back, e.g. ['Apple!', 'Star!', 'What comes next?']. */
+function sayParts(parts) {
+  parts = (parts || []).filter(Boolean);
+  if (!S.voice || !parts.length) return;
+  stopVoice();
+  if (S.voiceStyle === 'jolly' && CLIPS) {
+    const files = parts.map(function (p) { return CLIPS[vkey(p)]; });
+    if (files.every(Boolean)) { playClips(files, parts); return; }
+    parts.forEach(function (p) { if (!CLIPS[vkey(p)] && missingClips.indexOf(p) < 0) missingClips.push(p); });
+  }
+  deviceSay(parts.join(' '));
+}
+function playClips(files, parts) {
+  const gen = ++clipGen;
+  if (!clipEl) { clipEl = new Audio(); clipEl.preload = 'auto'; }
+  let i = 0;
+  const next = function () {
+    if (gen !== clipGen || i >= files.length) return;
+    clipEl.src = 'voice/' + files[i++];
+    const p = clipEl.play();
+    if (p && p.catch) p.catch(function () { /* blocked or missing: onerror handles it */ });
+  };
+  clipEl.onended = next;
+  clipEl.onerror = function () { if (gen === clipGen) { clipGen++; deviceSay(parts.slice(Math.max(0, i - 1)).join(' ')); } };
+  next();
+}
+function deviceSay(text) {
   const v = VOICE[S.voiceStyle], A = window.TuldokAndroid;
   if (A && typeof A.speak === 'function') {
     try {
@@ -279,6 +314,8 @@ function say(text) {
   } catch (e) { /* voice is optional */ }
 }
 function stopVoice() {
+  clipGen++;
+  if (clipEl) { try { clipEl.onended = null; clipEl.pause(); } catch (e) { /* ignore */ } }
   const A = window.TuldokAndroid;
   try { if (A && typeof A.stopSpeaking === 'function') A.stopSpeaking(); else if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) { /* ignore */ }
 }
@@ -1061,8 +1098,8 @@ function patternRound() {
   dom.appendChild(q); dom.appendChild(row); dom.appendChild(ch);
   GAME.fit = function () { row.style.setProperty('--sz', Math.floor(Math.max(46, Math.min(130, (W - 40) / (shown + 1) - 14, H * 0.26))) + 'px'); };
   GAME.fit();
-  const names = seq.slice(0, shown).map(function (i) { return things[i][1]; }).join(', ');
-  GAME.say = function () { say(names + '! What comes next?'); };
+  const names = seq.slice(0, shown).map(function (i) { return cap(things[i][1]) + '!'; });
+  GAME.say = function () { sayParts(names.concat(['What comes next?'])); };
   GAME.say();
 }
 
@@ -1168,12 +1205,15 @@ function openGrown() {
   seg('setAge', [['nursery', 'Nursery · 3'], ['prek', 'Pre-K · 4'], ['kinder', 'Kinder · 5']], function () { return S.age; }, function (v) { S.age = v; save('age', v); });
   seg('setSound', [[true, 'On'], [false, 'Off']], function () { return S.sound; }, function (v) { S.sound = v; save('sound', v); });
   seg('setVoice', [[true, 'On'], [false, 'Off']], function () { return S.voice; }, function (v) { S.voice = v; save('voice', v); if (!v) stopVoice(); });
-  seg('setVoiceStyle', [['jolly', 'Jolly'], ['calm', 'Calm']], function () { return S.voiceStyle; }, function (v) { S.voiceStyle = v; save('voiceStyle', v); say("Hi there! Let's play!"); });
+  seg('setVoiceStyle', [['jolly', 'Happy teacher'], ['calm', 'Calm (tablet voice)']], function () { return S.voiceStyle; }, function (v) { S.voiceStyle = v; save('voiceStyle', v); say("Hi there! Let's play!"); });
   $('resetStars').textContent = 'Reset stars';
   const A = window.TuldokAndroid;
   let ver = 'web preview';
   try { if (A && typeof A.version === 'function') ver = 'app version ' + A.version(); } catch (e) { /* ignore */ }
-  $('version').textContent = 'Tuldok ' + ver;
+  const nClips = CLIPS ? Object.keys(CLIPS).length : 0;
+  let vInfo = nClips ? ' · ' + nClips + ' voice clips' : ' · no voice clips yet (tablet voice)';
+  if (missingClips.length) vInfo += ' · ' + missingClips.length + ' lines without a clip: ' + missingClips.slice(0, 3).join(' / ');
+  $('version').textContent = 'Tuldok ' + ver + vInfo;
   $('grown').hidden = false;
 }
 function closeGrown() { $('grown').hidden = true; buildTiles(); }
