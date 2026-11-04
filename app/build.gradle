@@ -25,6 +25,9 @@ android {
             storePassword 'tuldok-test'
             keyAlias 'tuldok'
             keyPassword 'tuldok-test'
+            // Older vendor installers (some Huawei/EMUI) still check the v1 JAR signature.
+            enableV1Signing true
+            enableV2Signing true
         }
     }
 
@@ -32,6 +35,13 @@ android {
         release {
             minifyEnabled false
             signingConfig testKey.exists() ? signingConfigs.tuldokTest : signingConfigs.debug
+        }
+    }
+
+    packaging {
+        resources {
+            // Stray manifest from library jars; some installers reject it as an unsigned signature file.
+            excludes += ['META-INF/versions/9/OSGI-INF/MANIFEST.MF']
         }
     }
 
