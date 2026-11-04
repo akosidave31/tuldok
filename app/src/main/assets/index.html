@@ -50,7 +50,6 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .tile:active { transform: translateY(3px); }
 .tile .ic { font-size: clamp(46px, 7vw, 74px); line-height: 1; font-family: var(--font-d); font-weight: 700; color: var(--c); }
 .tile .nm { font-family: var(--font-d); font-weight: 600; font-size: clamp(20px, 2.6vw, 28px); text-align: center; }
-.tile .nm2 { font-size: clamp(14px, 1.8vw, 18px); color: var(--muted); margin-top: -4px; text-align: center; }
 .tile .st { position: absolute; top: 10px; right: 14px; font-size: 16px; color: var(--muted); font-family: var(--font-d); }
 
 /* play */
@@ -67,7 +66,6 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 #overlay { pointer-events: none; }
 .dom { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 10px 16px 18px; touch-action: none; }
 .prompt { font-family: var(--font-d); font-weight: 600; font-size: clamp(22px, 3.2vw, 34px); text-align: center; }
-.prompt small { display: block; font-family: var(--font-b); font-weight: 400; font-size: .68em; color: var(--muted); }
 
 /* counting */
 .count-grid { display: grid; grid-template-columns: repeat(var(--cols, 5), var(--sz, 100px)); gap: 14px; justify-content: center; }
@@ -180,14 +178,13 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="grownTitle">
     <h2 id="grownTitle">For grown-ups</h2>
     <div class="row"><span class="lab">Age group</span><div id="setAge" class="seg"></div></div>
-    <div class="row"><span class="lab">Language</span><div id="setLang" class="seg"></div></div>
     <div class="row"><span class="lab">Sounds</span><div id="setSound" class="seg"></div></div>
     <div class="row"><span class="lab">Voice (reads instructions aloud)</span><div id="setVoice" class="seg"></div></div>
-    <div class="row"><span class="lab">Voice language</span><div id="setVoiceLang" class="seg"></div></div>
     <div class="row"><span class="lab">Voice style</span><div id="setVoiceStyle" class="seg"></div></div>
     <button id="toPrint" class="wide" type="button">🖨️ Printable worksheets (PDF)</button>
     <button id="resetStars" class="wide" type="button">Reset stars</button>
     <p class="note">The tracing games check that children start at the green dot and follow the arrow, the way letters are taught in class. Nursery gets wider paths and big letters only.</p>
+    <p id="version" class="note"></p>
     <button id="closeGrown" class="done-btn" type="button">Done</button>
   </div>
 </div>
@@ -221,14 +218,11 @@ const CRAYON = ['#ef476f', '#f78c1f', '#06d6a0', '#118ab2', '#8e5cd9', '#ff70a6'
 /* ================= settings and stars ================= */
 function load(k, d) { try { const v = localStorage.getItem('tuldok-play-' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } }
 function save(k, v) { try { localStorage.setItem('tuldok-play-' + k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
-const S = { age: load('age', 'prek'), lang: load('lang', 'both'), sound: load('sound', true), voice: load('voice', true), voiceLang: load('voiceLang', 'en'), voiceStyle: load('voiceStyle', 'jolly') };
+const S = { age: load('age', 'prek'), sound: load('sound', true), voice: load('voice', true), voiceStyle: load('voiceStyle', 'jolly') };
 if (['nursery', 'prek', 'kinder'].indexOf(S.age) < 0) S.age = 'prek';
-if (['en', 'fil', 'both'].indexOf(S.lang) < 0) S.lang = 'both';
-if (['en', 'fil', 'both'].indexOf(S.voiceLang) < 0) S.voiceLang = 'en';
 if (['jolly', 'calm'].indexOf(S.voiceStyle) < 0) S.voiceStyle = 'jolly';
 let stars = load('stars', {});
 if (!stars || typeof stars !== 'object') stars = {};
-const tr = function (en, fil) { return S.lang === 'fil' ? fil : en; };
 
 /* ================= sound effects (made in code, no files) ================= */
 let actx = null;
@@ -261,27 +255,33 @@ const sfx = {
 };
 document.addEventListener('pointerdown', function () { audio(); }, { once: true });
 
-/* ================= voice: Android text-to-speech in the app, browser speech elsewhere ================= */
-const VOICE = { jolly: { pitch: 1.35, rate: 0.95 }, calm: { pitch: 1.0, rate: 0.85 } };
-function speak(parts) {
-  if (!S.voice || !parts.length) return;
-  const A = window.TuldokAndroid;
+/* ================= voice =================
+   In the app, Android reads the line into a sound file and plays it back with a raised pitch (works with any speech engine).
+   In a browser, the built-in speech voice is used. */
+const VOICE = { jolly: { pitch: 1.4, rate: 0.95 }, calm: { pitch: 1.0, rate: 0.85 } };
+function say(text) {
+  if (!S.voice || !text) return;
+  const v = VOICE[S.voiceStyle], A = window.TuldokAndroid;
   if (A && typeof A.speak === 'function') {
-    try { if (typeof A.stopSpeaking === 'function') A.stopSpeaking(); if (typeof A.setVoice === 'function') A.setVoice(VOICE[S.voiceStyle].pitch, VOICE[S.voiceStyle].rate); parts.forEach(function (p) { A.speak(p[0], p[1]); }); } catch (e) { /* voice is optional */ }
+    try {
+      if (typeof A.stopSpeaking === 'function') A.stopSpeaking();
+      if (typeof A.setVoice === 'function') A.setVoice(v.pitch, v.rate);
+      A.speak(text, 'en');
+    } catch (e) { /* voice is optional */ }
     return;
   }
   if (!('speechSynthesis' in window)) return;
   try {
     window.speechSynthesis.cancel();
-    parts.forEach(function (p) { const u = new SpeechSynthesisUtterance(p[0]); u.lang = p[1] === 'fil' ? 'fil-PH' : 'en-US'; u.rate = VOICE[S.voiceStyle].rate; u.pitch = VOICE[S.voiceStyle].pitch; window.speechSynthesis.speak(u); });
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US'; u.rate = v.rate; u.pitch = v.pitch;
+    window.speechSynthesis.speak(u);
   } catch (e) { /* voice is optional */ }
 }
 function stopVoice() {
   const A = window.TuldokAndroid;
   try { if (A && typeof A.stopSpeaking === 'function') A.stopSpeaking(); else if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) { /* ignore */ }
 }
-function say(en, fil) { const p = []; if (S.voiceLang !== 'fil' && en) p.push([en, 'en']); if (S.voiceLang !== 'en' && fil) p.push([fil, 'fil']); speak(p); }
-function sayOne(en, fil) { if (S.voiceLang === 'fil') speak([[fil, 'fil']]); else speak([[en, 'en']]); }
 
 /* ================= stroke font =================
    Ball-and-stick letters, one string per pen stroke in teaching order.
@@ -302,7 +302,6 @@ const GLYPH_SRC = {
   L: [54, 'M6 0 L6 100 L50 100'],
   M: [84, 'M6 0 L6 100', 'M6 0 L42 100 L78 0 L78 100'],
   N: [68, 'M6 0 L6 100', 'M6 0 L62 100 L62 0'],
-  'Ñ': [68, 'M6 0 L6 100', 'M6 0 L62 100 L62 0', 'M12 -12 C18 -22 26 -22 32 -15 C38 -8 46 -8 54 -18'],
   O: [90, 'E45 50 42 50 -90 -450'],
   P: [62, 'M6 0 L6 100', 'M6 0 L32 0 E32 25 26 25 -90 90 L6 50'],
   Q: [92, 'E45 50 42 50 -90 -450', 'M58 74 L88 102'],
@@ -329,7 +328,6 @@ const GLYPH_SRC = {
   l: [16, 'M8 0 L8 100'],
   m: [80, 'M6 50 L6 100', 'M6 70 E23 70 17 20 180 360 L40 100', 'M40 70 E57 70 17 20 180 360 L74 100'],
   n: [58, 'M6 50 L6 100', 'M6 72 E29 72 23 22 180 360 L52 100'],
-  'ñ': [58, 'M6 50 L6 100', 'M6 72 E29 72 23 22 180 360 L52 100', 'M8 34 C14 24 22 24 28 30 C34 36 42 36 50 26'],
   o: [56, 'E28 75 25 25 -90 -450'],
   p: [58, 'M6 50 L6 140', 'E31 75 25 25 180 540'],
   q: [58, 'E28 75 25 25 -30 -390', 'M53 50 L53 140'],
@@ -386,73 +384,57 @@ const GL = {};
 Object.keys(GLYPH_SRC).forEach(function (key) { const src = GLYPH_SRC[key]; GL[key] = { w: src[0], strokes: src.slice(1).map(parseStroke) }; });
 
 /* ================= content ================= */
-const NUM_EN = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
-const NUM_FIL = ['sero', 'isa', 'dalawa', 'tatlo', 'apat', 'lima', 'anim', 'pito', 'walo', 'siyam', 'sampu', 'labing-isa', 'labindalawa', 'labintatlo', 'labing-apat', 'labinlima', 'labing-anim', 'labimpito', 'labingwalo', 'labinsiyam', 'dalawampu'];
-const ALPHA_EN = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-const ALPHA_FIL = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'Ñ', 'NG', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
-const CUE = {
-  en: { A: ['🍎', 'apple'], B: ['⚽', 'ball'], C: ['🐱', 'cat'], D: ['🐶', 'dog'], E: ['🥚', 'egg'], F: ['🐟', 'fish'], G: ['🍇', 'grapes'], H: ['🏠', 'house'], I: ['🍦', 'ice cream'], J: ['🧃', 'juice'], K: ['🪁', 'kite'], L: ['🦁', 'lion'], M: ['🌙', 'moon'], N: ['👃', 'nose'], O: ['🐙', 'octopus'], P: ['🐷', 'pig'], Q: ['👸', 'queen'], R: ['🌈', 'rainbow'], S: ['☀️', 'sun'], T: ['🌳', 'tree'], U: ['☂️', 'umbrella'], V: ['🎻', 'violin'], W: ['🍉', 'watermelon'], X: ['📦', 'box'], Y: ['🪀', 'yo-yo'], Z: ['🦓', 'zebra'] },
-  fil: { A: ['🐶', 'aso'], B: ['⚽', 'bola'], D: ['🍃', 'dahon'], E: ['🐘', 'elepante'], G: ['🕷️', 'gagamba'], H: ['🦐', 'hipon'], I: ['🐦', 'ibon'], K: ['🐃', 'kalabaw'], L: ['🎈', 'lobo'], M: ['🥭', 'mangga'], N: ['🥥', 'niyog'], NG: ['🦷', 'ngipin'], O: ['🐻', 'oso'], P: ['🐱', 'pusa'], R: ['🎁', 'regalo'], S: ['🍌', 'saging'], T: ['🐯', 'tigre'], U: ['☁️', 'ulap'], V: ['⛵', 'vinta'], W: ['🧹', 'walis'], Y: ['🧊', 'yelo'], Z: ['🦓', 'zebra'] },
-};
-const THINGS = [['🍎', 'apple', 'mansanas'], ['⭐', 'star', 'bituin'], ['🐟', 'fish', 'isda'], ['🌸', 'flower', 'bulaklak'], ['🚗', 'car', 'kotse'], ['🎈', 'balloon', 'lobo'], ['🐱', 'cat', 'pusa'], ['🐶', 'dog', 'aso'], ['🦋', 'butterfly', 'paru-paro'], ['🥭', 'mango', 'mangga'], ['🍌', 'banana', 'saging'], ['⚽', 'ball', 'bola'], ['🐝', 'bee', 'bubuyog'], ['🌙', 'moon', 'buwan'], ['🐸', 'frog', 'palaka'], ['🦆', 'duck', 'pato'], ['🍉', 'watermelon', 'pakwan'], ['🐢', 'turtle', 'pagong'], ['🍓', 'strawberry', 'presa'], ['🚌', 'bus', 'bus']];
+const NUM = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const CUE = { A: ['🍎', 'apple'], B: ['⚽', 'ball'], C: ['🐱', 'cat'], D: ['🐶', 'dog'], E: ['🥚', 'egg'], F: ['🐟', 'fish'], G: ['🍇', 'grapes'], H: ['🏠', 'house'], I: ['🍦', 'ice cream'], J: ['🧃', 'juice'], K: ['🪁', 'kite'], L: ['🦁', 'lion'], M: ['🌙', 'moon'], N: ['👃', 'nose'], O: ['🐙', 'octopus'], P: ['🐷', 'pig'], Q: ['👸', 'queen'], R: ['🌈', 'rainbow'], S: ['☀️', 'sun'], T: ['🌳', 'tree'], U: ['☂️', 'umbrella'], V: ['🎻', 'violin'], W: ['🍉', 'watermelon'], X: ['📦', 'box'], Y: ['🪀', 'yo-yo'], Z: ['🦓', 'zebra'] };
+const THINGS = [['🍎', 'apple'], ['⭐', 'star'], ['🐟', 'fish'], ['🌸', 'flower'], ['🚗', 'car'], ['🎈', 'balloon'], ['🐱', 'cat'], ['🐶', 'dog'], ['🦋', 'butterfly'], ['🥭', 'mango'], ['🍌', 'banana'], ['⚽', 'ball'], ['🐝', 'bee'], ['🌙', 'moon'], ['🐸', 'frog'], ['🦆', 'duck'], ['🍉', 'watermelon'], ['🐢', 'turtle'], ['🍓', 'strawberry'], ['🚌', 'bus']];
 const LINE_SET = [
-  { kind: 'horizontal', from: '🐝', to: '🌼', name: ['Sleeping line', 'Pahigang linya'], en: 'Help the bee fly to the flower.', fil: 'Tulungan ang bubuyog na lumipad papunta sa bulaklak.' },
-  { kind: 'vertical', from: '☁️', to: '', name: ['Rain lines', 'Patayong linya'], en: 'Make rain! Draw from the top down.', fil: 'Gumawa ng ulan! Gumuhit mula itaas pababa.' },
-  { kind: 'circles', from: '⚽', to: '', name: ['Circles', 'Bilog'], en: 'Draw round circles, like a ball.', fil: 'Gumuhit ng bilog, parang bola.' },
-  { kind: 'crosses', from: '⭐', to: '', name: ['Crosses', 'Krus'], en: 'Draw a line down, then a line across.', fil: 'Gumuhit pababa, tapos pahiga.' },
-  { kind: 'slant', from: '🪁', to: '', name: ['Slanting lines', 'Pahilis na linya'], en: 'Draw slanting lines.', fil: 'Gumuhit ng pahilis na linya.' },
-  { kind: 'zigzag', from: '🐸', to: '🍃', name: ['Zigzag', 'Zigzag'], en: 'Help the frog hop to the leaf.', fil: 'Tulungan ang palaka na tumalon papunta sa dahon.' },
-  { kind: 'waves', from: '🐟', to: '🐚', name: ['Waves', 'Alon'], en: 'Swim like a fish to the shell.', fil: 'Lumangoy tulad ng isda papunta sa kabibe.' },
-  { kind: 'arches', from: '🐰', to: '🥕', name: ['Hills', 'Burol'], en: 'Hop like a bunny to the carrot.', fil: 'Tumalon tulad ng kuneho papunta sa karot.' },
-  { kind: 'loops', from: '🐞', to: '🌸', name: ['Loops', 'Paikot'], en: 'Loop all the way to the flower!', fil: 'Paikot-ikot papunta sa bulaklak!' },
+  { kind: 'horizontal', from: '🐝', to: '🌼', name: 'Sleeping line', say: 'Help the bee fly to the flower!' },
+  { kind: 'vertical', from: '☁️', to: '', name: 'Rain lines', say: 'Make rain! Draw from the top down!' },
+  { kind: 'circles', from: '⚽', to: '', name: 'Circles', say: 'Draw round circles, like a ball!' },
+  { kind: 'crosses', from: '⭐', to: '', name: 'Crosses', say: 'Draw a line down, then a line across!' },
+  { kind: 'slant', from: '🪁', to: '', name: 'Slanting lines', say: 'Draw slanting lines, like a kite string!' },
+  { kind: 'zigzag', from: '🐸', to: '🍃', name: 'Zigzag', say: 'Help the frog hop to the leaf!' },
+  { kind: 'waves', from: '🐟', to: '🐚', name: 'Waves', say: 'Swim like a fish to the shell!' },
+  { kind: 'arches', from: '🐰', to: '🥕', name: 'Hills', say: 'Hop like a bunny to the carrot!' },
+  { kind: 'loops', from: '🐞', to: '🌸', name: 'Loops', say: 'Loop all the way to the flower!' },
 ];
-const SHAPE_SET = [['circle', 'circle', 'bilog'], ['square', 'square', 'parisukat'], ['triangle', 'triangle', 'tatsulok'], ['rectangle', 'rectangle', 'parihaba'], ['star', 'star', 'bituin'], ['oval', 'oval', 'biluhaba'], ['heart', 'heart', 'puso'], ['diamond', 'diamond', 'diyamante']];
+const SHAPE_SET = ['circle', 'square', 'triangle', 'rectangle', 'star', 'oval', 'heart', 'diamond'];
 const PATTERNS = { AB: [0, 1], AAB: [0, 0, 1], ABB: [0, 1, 1], ABC: [0, 1, 2], AABB: [0, 0, 1, 1] };
 const PAT_BY_AGE = { nursery: ['AB'], prek: ['AB', 'AAB', 'ABB'], kinder: ['AB', 'AAB', 'ABB', 'ABC', 'AABB'] };
-const PRAISE = [['Yay! Great job!', 'Yehey! Magaling!'], ['Woohoo! You did it!', 'Yehey! Nagawa mo!'], ['Wow! Awesome!', 'Wow! Ang galing mo!'], ['Super duper!', 'Ang husay mo!']];
+const PRAISE = ['Yay! Great job!', 'Woohoo! You did it!', 'Wow! Awesome!', 'Super duper!', 'Hooray! You are a star!'];
 
-function letterKeys(L, kase) { if (L === 'NG') return kase === 'upper' ? ['N', 'G'] : ['n', 'g']; return [kase === 'upper' ? L : L.toLowerCase()]; }
-function cueList(L) {
-  const out = [], en = CUE.en[L], fil = CUE.fil[L];
-  if (S.lang !== 'fil' && en) out.push(en);
-  if (S.lang !== 'en' && fil && !(en && S.lang === 'both' && fil[1] === en[1])) out.push(fil);
-  return out;
-}
 function letterItems() {
-  const out = [], list = S.lang === 'en' ? ALPHA_EN : ALPHA_FIL;
-  list.forEach(function (L) {
-    const en = CUE.en[L], fil = CUE.fil[L], cues = cueList(L);
-    const cueEn = en ? ' ' + L + ' is for ' + en[1] + '!' : '', cueFil = fil ? ' ' + L + ', ' + fil[1] + '!' : '';
-    out.push({ type: 'glyph', keys: letterKeys(L, 'upper'), L: L, cue: cues, title: L, say: ["Let's trace big letter " + L + '!' + cueEn, 'Tara, bakatin natin ang malaking titik ' + L + '!' + cueFil] });
-    if (S.age !== 'nursery') {
-      const lo = L === 'NG' ? 'ng' : L.toLowerCase();
-      out.push({ type: 'glyph', keys: letterKeys(L, 'lower'), L: L, cue: cues, title: lo, say: ['Now the small letter ' + L + '!', 'Ngayon, ang maliit na titik ' + L + '!'] });
-    }
+  const out = [];
+  ALPHA.forEach(function (L) {
+    const cue = CUE[L], lo = L.toLowerCase();
+    out.push({ type: 'glyph', keys: [L], L: L, cue: cue, title: L, say: "Let's trace big letter " + L + '! ' + L + ' is for ' + cue[1] + '!' });
+    if (S.age !== 'nursery') out.push({ type: 'glyph', keys: [lo], L: L, cue: cue, title: lo, say: 'Now the small letter ' + L + '!' });
   });
   return out;
 }
 function numberItems() {
   const r = { nursery: [1, 5], prek: [1, 10], kinder: [0, 20] }[S.age], out = [];
-  for (let n = r[0]; n <= r[1]; n++) out.push({ type: 'glyph', keys: String(n).split(''), num: n, title: String(n), say: ["Let's trace the number " + NUM_EN[n] + '!', 'Tara, bakatin natin ang bilang ' + NUM_FIL[n] + '!'] });
+  for (let n = r[0]; n <= r[1]; n++) out.push({ type: 'glyph', keys: String(n).split(''), num: n, title: String(n), say: "Let's trace the number " + NUM[n] + '!' });
   return out;
 }
 function lineItems() {
   const n = { nursery: 4, prek: 7, kinder: 9 }[S.age];
-  return LINE_SET.slice(0, n).map(function (l) { return { type: 'path', kind: l.kind, from: l.from, to: l.to, title: tr(l.name[0], l.name[1]), say: [l.en, l.fil] }; });
+  return LINE_SET.slice(0, n).map(function (l) { return { type: 'path', kind: l.kind, from: l.from, to: l.to, title: l.name, say: l.say }; });
 }
 function shapeItems() {
   const n = { nursery: 3, prek: 5, kinder: 8 }[S.age];
-  return SHAPE_SET.slice(0, n).map(function (s) { return { type: 'shape', kind: s[0], title: tr(cap(s[1]), cap(s[2])), say: ['Trace the ' + s[1] + '.', 'Bakatin ang ' + s[2] + '.'] }; });
+  return SHAPE_SET.slice(0, n).map(function (s) { return { type: 'shape', kind: s, title: cap(s), say: "Let's trace " + (/^[aeiou]/.test(s) ? 'an ' : 'a ') + s + '!' }; });
 }
 
 const ACTS = {
-  letters: { icon: 'Aa', en: 'Letters', fil: 'Mga Titik', color: '#ef476f', mode: 'trace', items: letterItems },
-  numbers: { icon: '123', en: 'Numbers', fil: 'Mga Bilang', color: '#f78c1f', mode: 'trace', items: numberItems },
-  lines: { icon: '〰️', en: 'Lines', fil: 'Mga Linya', color: '#118ab2', mode: 'trace', items: lineItems },
-  shapes: { icon: '🔺', en: 'Shapes', fil: 'Mga Hugis', color: '#8e5cd9', mode: 'trace', items: shapeItems },
-  count: { icon: '🍎', en: 'Count', fil: 'Magbilang', color: '#06a77d', mode: 'count' },
-  match: { icon: '🧩', en: 'Match', fil: 'Pagtambalin', color: '#e09f00', mode: 'match' },
-  pattern: { icon: '🔁', en: "What's next?", fil: 'Ano ang susunod?', color: '#2a9d8f', mode: 'pattern' },
+  letters: { icon: 'Aa', name: 'Letters', color: '#ef476f', mode: 'trace', items: letterItems },
+  numbers: { icon: '123', name: 'Numbers', color: '#f78c1f', mode: 'trace', items: numberItems },
+  lines: { icon: '〰️', name: 'Lines', color: '#118ab2', mode: 'trace', items: lineItems },
+  shapes: { icon: '🔺', name: 'Shapes', color: '#8e5cd9', mode: 'trace', items: shapeItems },
+  count: { icon: '🍎', name: 'Count', color: '#06a77d', mode: 'count' },
+  match: { icon: '🧩', name: 'Match', color: '#e09f00', mode: 'match' },
+  pattern: { icon: '🔁', name: "What's next?", color: '#2a9d8f', mode: 'pattern' },
 };
 
 /* ================= path shapes for lines and shapes ================= */
@@ -546,20 +528,16 @@ function badge(ctx, x, y, r, txt, color) {
   ctx.fillText(txt, x, y + r * 0.06);
 }
 function drawWord(ctx, word, L, cx, y, size, maxW) {
-  const lw = L.toLowerCase(), parts = [];
-  let i = 0;
-  while (i < word.length) {
-    if (word.substr(i, lw.length).toLowerCase() === lw) { parts.push([word.substr(i, lw.length), true]); i += lw.length; }
-    else { parts.push([word.charAt(i), false]); i++; }
-  }
+  const lw = L.toLowerCase(), segs = [];
+  for (let i = 0; i < word.length; i++) segs.push([word.charAt(i), word.charAt(i).toLowerCase() === lw]);
   ctx.save();
   let fs = size;
-  const widthOf = function () { let w = 0; parts.forEach(function (p) { ctx.font = (p[1] ? 700 : 400) + ' ' + fs + 'px ' + FONT_B; w += ctx.measureText(p[0]).width; }); return w; };
+  const widthOf = function () { let w = 0; segs.forEach(function (p) { ctx.font = (p[1] ? 700 : 400) + ' ' + fs + 'px ' + FONT_B; w += ctx.measureText(p[0]).width; }); return w; };
   let tw = widthOf(), guard = 0;
   while (tw > maxW && fs > 8 && guard++ < 30) { fs *= 0.92; tw = widthOf(); }
   let x = cx - tw / 2;
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-  parts.forEach(function (p) { ctx.font = (p[1] ? 700 : 400) + ' ' + fs + 'px ' + FONT_B; ctx.fillStyle = p[1] ? '#ef476f' : '#22313a'; ctx.fillText(p[0], x, y); x += ctx.measureText(p[0]).width; });
+  segs.forEach(function (p) { ctx.font = (p[1] ? 700 : 400) + ' ' + fs + 'px ' + FONT_B; ctx.fillStyle = p[1] ? '#ef476f' : '#22313a'; ctx.fillText(p[0], x, y); x += ctx.measureText(p[0]).width; });
   ctx.restore();
 }
 
@@ -619,18 +597,18 @@ function dotsAlong(ctx, st, gap, r) {
 }
 
 /* ---- confetti stars ---- */
-const parts = [];
+const confetti = [];
 function burst(x, y, n) {
   for (let i = 0; i < n; i++) {
     const a = Math.random() * Math.PI * 2, v = 3 + Math.random() * 7;
-    parts.push({ x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 4, life: 1, c: pick(CRAYON), s: 7 + Math.random() * 12, star: Math.random() < 0.6 });
+    confetti.push({ x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 4, life: 1, c: pick(CRAYON), s: 7 + Math.random() * 12, star: Math.random() < 0.6 });
   }
 }
-function renderParts(ctx) {
-  for (let i = parts.length - 1; i >= 0; i--) {
-    const p = parts[i];
+function renderConfetti(ctx) {
+  for (let i = confetti.length - 1; i >= 0; i--) {
+    const p = confetti[i];
     p.x += p.vx; p.y += p.vy; p.vy += 0.25; p.life -= 0.013;
-    if (p.life <= 0) { parts.splice(i, 1); continue; }
+    if (p.life <= 0) { confetti.splice(i, 1); continue; }
     ctx.globalAlpha = Math.max(0, p.life);
     ctx.fillStyle = p.c;
     if (p.star) { const q = starPoly(p.x, p.y, p.s, p.s * 0.45); ctx.beginPath(); ctx.moveTo(q[0], q[1]); for (let k = 2; k + 1 < q.length; k += 2) ctx.lineTo(q[k], q[k + 1]); ctx.closePath(); ctx.fill(); }
@@ -674,7 +652,7 @@ function layoutTrace() {
   const item = TR.item;
   if (!item) return;
   const g = itemGeometry(item);
-  const hasCue = item.type === 'glyph' && ((item.cue && item.cue.length) || item.num !== undefined);
+  const hasCue = item.type === 'glyph' && (item.cue || item.num !== undefined);
   const land = W >= H;
   let ax = 16, ay = 8, aw = W - 32, ah = H - 24, cueBox = null;
   if (hasCue) {
@@ -705,15 +683,15 @@ function loadTrace(i) {
   hideWin();
   layoutTrace();
   $('playTitle').textContent = TR.item.title;
-  say(TR.item.say[0], TR.item.say[1]);
+  say(TR.item.say);
   const mine = TR.item;
-  setTimeout(function () { if (TR.item === mine && !TR.done && TR.cur === 0 && TR.prog === 0 && !TR.tracing) startDemo(); }, 1200);
+  setTimeout(function () { if (TR.item === mine && !TR.done && TR.cur === 0 && TR.prog === 0 && !TR.tracing) startDemo(); }, 1400);
 }
 function startDemo() { if (!TR.done && TR.strokes.length) TR.demo = { i: TR.cur, t0: performance.now() }; }
 function hintStart() {
   const now = performance.now();
   TR.pulse = now;
-  if (now - TR.hintT > 3500) { TR.hintT = now; sayOne('Start at the green dot.', 'Magsimula sa berdeng tuldok.'); }
+  if (now - TR.hintT > 3500) { TR.hintT = now; say('Start at the green dot!'); }
 }
 function completeStroke() {
   const st = TR.strokes[TR.cur];
@@ -778,14 +756,10 @@ function drawCue(ctx) {
   rrect(ctx, b.x, b.y, b.w, b.h, 26);
   ctx.fill();
   if (it.num !== undefined) { drawTenFrames(ctx, b, it.num); return; }
-  const cues = it.cue || [], n = cues.length, tall = b.h > b.w;
-  cues.forEach(function (c, i) {
-    const cw = tall ? b.w : b.w / n, ch = tall ? b.h / n : b.h;
-    const cx = tall ? b.x + b.w / 2 : b.x + cw * (i + 0.5), top = tall ? b.y + ch * i : b.y;
-    const es = Math.min(cw * 0.55, ch * 0.5);
-    emojiAt(ctx, c[0], cx, top + ch * 0.42, es);
-    drawWord(ctx, c[1], it.L, cx, top + ch * 0.42 + es * 0.55 + Math.min(36, es * 0.36), Math.min(36, es * 0.36), cw - 18);
-  });
+  if (!it.cue) return;
+  const es = Math.min(b.w * 0.55, b.h * 0.5);
+  emojiAt(ctx, it.cue[0], b.x + b.w / 2, b.y + b.h * 0.42, es);
+  drawWord(ctx, it.cue[1], it.L, b.x + b.w / 2, b.y + b.h * 0.42 + es * 0.55 + Math.min(40, es * 0.38), Math.min(40, es * 0.38), b.w - 18);
 }
 function drawTenFrames(ctx, b, n) {
   const frames = n > 10 ? 2 : 1, tall = b.h > b.w, gap = 0.6;
@@ -807,7 +781,7 @@ function drawTenFrames(ctx, b, n) {
   ctx.fillStyle = '#22313a';
   ctx.font = '600 ' + Math.round(Math.max(18, Math.min(40, cell * 0.8))) + 'px ' + FONT_D;
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  ctx.fillText(S.lang === 'fil' ? NUM_FIL[n] : NUM_EN[n], b.x + b.w / 2, y0 + totH + cell * 1.1);
+  ctx.fillText(NUM[n], b.x + b.w / 2, y0 + totH + cell * 1.1);
 }
 function renderTrace(now) {
   const ctx = tctx;
@@ -878,7 +852,12 @@ function renderDemo(ctx, now) {
 
 /* ================= counting game ================= */
 const CG = { n: 0, counted: 0, locked: false, done: false, thing: null };
-function setPrompt(node, en, fil) { node.textContent = ''; node.appendChild(document.createTextNode(S.lang === 'fil' ? fil : en)); if (S.lang === 'both') node.appendChild(el('small', '', fil)); }
+function plural(w) {
+  const special = { fish: 'fish', mango: 'mangoes', bus: 'buses' };
+  if (special[w]) return special[w];
+  if (/[^aeiou]y$/.test(w)) return w.slice(0, -1) + 'ies';
+  return w + 's';
+}
 function numberChoices(n, maxN) {
   const set = [n];
   let guard = 0;
@@ -893,8 +872,8 @@ function countRound() {
   let n = rInt(range[0], range[1]);
   if (n === CG.n) n = rInt(range[0], range[1]);
   CG.n = n; CG.counted = 0; CG.locked = false; CG.done = false; CG.thing = pick(THINGS);
-  const q = el('div', 'prompt'); q.id = 'prompt';
-  setPrompt(q, 'Tap each one and count!', 'I-tap ang bawat isa at bilangin!');
+  const q = el('div', 'prompt', 'Tap each one and count!');
+  q.id = 'prompt';
   const grid = el('div', 'count-grid');
   for (let i = 0; i < n; i++) {
     const b = el('button', 'thing', CG.thing[0]);
@@ -905,12 +884,13 @@ function countRound() {
       b.dataset.n = String(CG.counted);
       b.classList.add('counted', 'pop');
       sfx.tick();
-      sayOne(NUM_EN[CG.counted], NUM_FIL[CG.counted]);
+      say(cap(NUM[CG.counted]) + '!');
       if (CG.counted === CG.n) { CG.locked = true; setTimeout(askHowMany, 750); }
     });
     grid.appendChild(b);
   }
-  const ch = el('div', 'choices'); ch.id = 'choices';
+  const ch = el('div', 'choices');
+  ch.id = 'choices';
   dom.appendChild(q); dom.appendChild(grid); dom.appendChild(ch);
   GAME.fit = function () {
     const cols = Math.min(5, n), rows = Math.ceil(n / 5);
@@ -919,26 +899,26 @@ function countRound() {
     grid.style.setProperty('--sz', sz + 'px');
   };
   GAME.fit();
-  GAME.say = function () { say('Tap each one and count!', 'I-tap ang bawat isa at bilangin!'); };
+  GAME.say = function () { say("Let's count! Tap each " + CG.thing[1] + '!'); };
   GAME.say();
 }
 function askHowMany() {
   const ch = $('choices'), q = $('prompt');
   if (!ch || !q) return;
   ch.textContent = '';
-  setPrompt(q, 'How many?', 'Ilan lahat?');
-  GAME.say = function () { say('How many?', 'Ilan lahat?'); };
+  q.textContent = 'How many?';
+  GAME.say = function () { say('How many ' + plural(CG.thing[1]) + ' did you count?'); };
   GAME.say();
   shuffle(numberChoices(CG.n, Math.max(5, CG.n + 2))).forEach(function (v) {
     const b = el('button', 'choice pop', String(v));
     b.type = 'button';
     b.addEventListener('click', function () {
       if (CG.done) return;
-      if (v === CG.n) { CG.done = true; b.classList.add('right'); sfx.good(); say('Yes! ' + cap(NUM_EN[v]) + '!', 'Tama! ' + cap(NUM_FIL[v]) + '!'); roundWon(); }
+      if (v === CG.n) { CG.done = true; b.classList.add('right'); sfx.good(); say('Yes! ' + cap(NUM[v]) + '!'); roundWon(); }
       else {
         b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
         sfx.oops();
-        say("Let's count again.", 'Bilangin natin ulit.');
+        say("Oops! Let's count again!");
         setTimeout(resetCount, 1100);
       }
     });
@@ -951,8 +931,8 @@ function resetCount() {
   dom.querySelectorAll('.thing').forEach(function (b) { b.classList.remove('counted', 'pop'); delete b.dataset.n; });
   const ch = $('choices'), q = $('prompt');
   if (ch) ch.textContent = '';
-  if (q) setPrompt(q, 'Tap each one and count!', 'I-tap ang bawat isa at bilangin!');
-  GAME.say = function () { say('Tap each one and count!', 'I-tap ang bawat isa at bilangin!'); };
+  if (q) q.textContent = 'Tap each one and count!';
+  GAME.say = function () { say("Let's count! Tap each " + CG.thing[1] + '!'); };
 }
 
 /* ================= matching game ================= */
@@ -973,16 +953,11 @@ function matchRound() {
   const kinds = { nursery: ['pictures'], prek: ['pictures', 'numbers'], kinder: ['pictures', 'letters', 'numbers'] }[S.age];
   const kind = kinds[GAME.round % kinds.length], n = { nursery: 3, prek: 4, kinder: 5 }[S.age];
   let keys;
-  if (kind === 'letters') keys = shuffle(ALPHA_EN).slice(0, n);
+  if (kind === 'letters') keys = shuffle(ALPHA).slice(0, n);
   else if (kind === 'numbers') keys = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].slice(0, S.age === 'kinder' ? 10 : 6)).slice(0, n).map(String);
   else keys = shuffle(THINGS).slice(0, n).map(function (t) { return t[0]; });
-  const words = {
-    pictures: ['Draw a line to the same picture.', 'Gumuhit ng linya papunta sa kaparehong larawan.'],
-    letters: ['Match the big letter to the small letter.', 'Pagtambalin ang malaking titik at maliit na titik.'],
-    numbers: ['Match the number to the dots.', 'Pagtambalin ang bilang at ang mga tuldok.'],
-  }[kind];
-  const q = el('div', 'prompt');
-  setPrompt(q, words[0], words[1]);
+  const line = { pictures: 'Draw a line to the same picture!', letters: 'Match the big letter to the small letter!', numbers: 'Match the number to the dots!' }[kind];
+  const q = el('div', 'prompt', line);
   const board = el('div', 'match');
   const lefts = keys.map(function (k) { return makeCard(k, 'L', kind); });
   const rights = shuffle(keys).map(function (k) { return makeCard(k, 'R', kind); });
@@ -991,7 +966,7 @@ function matchRound() {
   MG.lines = []; MG.drag = null; MG.sel = null; MG.left = n;
   GAME.fit = function () { board.style.setProperty('--sz', Math.floor(Math.max(60, Math.min(140, (H - 120) / n - 16, W * 0.26))) + 'px'); };
   GAME.fit();
-  GAME.say = function () { say(words[0], words[1]); };
+  GAME.say = function () { say(line); };
   GAME.say();
 }
 function tryMatch(a, b) {
@@ -1059,8 +1034,7 @@ function patternRound() {
   const answer = things[seq[shown]], opts = [answer];
   things.slice(0, units).forEach(function (t) { if (opts.length < nOpt && opts.indexOf(t) < 0) opts.push(t); });
   if (opts.length < nOpt) opts.push(things[units]);
-  const q = el('div', 'prompt');
-  setPrompt(q, 'What comes next?', 'Ano ang susunod?');
+  const q = el('div', 'prompt', 'What comes next?');
   const row = el('div', 'seq');
   for (let k = 0; k < shown; k++) row.appendChild(el('div', 'cell', things[seq[k]][0]));
   const blank = el('div', 'cell q', '?');
@@ -1075,11 +1049,11 @@ function patternRound() {
       if (t === answer) {
         done = true;
         blank.textContent = t[0]; blank.classList.add('filled', 'pop'); b.classList.add('right');
-        sfx.good(); sayOne('Yes! ' + cap(t[1]) + '!', 'Tama! ' + cap(t[2]) + '!');
+        sfx.good(); say('Yes! ' + cap(t[1]) + '!');
         roundWon();
       } else {
         b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
-        sfx.oops(); sayOne('Look again.', 'Tingnan ulit.');
+        sfx.oops(); say('Hmm, look again!');
       }
     });
     ch.appendChild(b);
@@ -1087,18 +1061,18 @@ function patternRound() {
   dom.appendChild(q); dom.appendChild(row); dom.appendChild(ch);
   GAME.fit = function () { row.style.setProperty('--sz', Math.floor(Math.max(46, Math.min(130, (W - 40) / (shown + 1) - 14, H * 0.26))) + 'px'); };
   GAME.fit();
-  const names = seq.slice(0, shown).map(function (i) { return S.voiceLang === 'fil' ? things[i][2] : things[i][1]; }).join(', ');
-  GAME.say = function () { sayOne(names + '. What comes next?', names + '. Ano ang susunod?'); };
+  const names = seq.slice(0, shown).map(function (i) { return things[i][1]; }).join(', ');
+  GAME.say = function () { say(names + '! What comes next?'); };
   GAME.say();
 }
 
 /* ================= game flow ================= */
 let mode = null, curAct = null, rafId = 0, lastPraise = PRAISE[0];
 const GAME = { round: 0, total: 5, fit: null, say: null };
-function praise() { lastPraise = pick(PRAISE); say(lastPraise[0], lastPraise[1]); }
+function praise() { lastPraise = pick(PRAISE); say(lastPraise); }
 function award(key) { stars[key] = (stars[key] || 0) + 1; save('stars', stars); updateStars(); }
 function updateStars() { $('starCount').textContent = '⭐ ' + (stars[curAct] || 0); }
-function showWin() { $('winText').textContent = S.lang === 'both' ? lastPraise[0] + ' ' + lastPraise[1] : tr(lastPraise[0], lastPraise[1]); $('win').hidden = false; }
+function showWin() { $('winText').textContent = lastPraise; $('win').hidden = false; }
 function hideWin() { $('win').hidden = true; }
 function roundWon() {
   burst(W / 2, H * 0.45, 30);
@@ -1110,7 +1084,7 @@ function roundWon() {
 function nextRound() {
   if (!curAct) return;
   hideWin();
-  $('playTitle').textContent = tr(ACTS[curAct].en, ACTS[curAct].fil) + '  ' + (GAME.round + 1) + '/' + GAME.total;
+  $('playTitle').textContent = ACTS[curAct].name + '  ' + (GAME.round + 1) + '/' + GAME.total;
   if (mode === 'count') countRound();
   else if (mode === 'match') matchRound();
   else if (mode === 'pattern') patternRound();
@@ -1126,7 +1100,7 @@ function startAct(key) {
   $('prevBtn').hidden = !trace; $('nextBtn').hidden = !trace; $('showBtn').hidden = !trace;
   dom.textContent = '';
   GAME.fit = null; GAME.say = null;
-  parts.length = 0;
+  confetti.length = 0;
   updateStars();
   if (trace) { TR.items = a.items(); loadTrace(load('pos-' + key, 0)); }
   else { GAME.round = 0; nextRound(); }
@@ -1147,14 +1121,14 @@ function frame(now) {
     if (mode === 'trace') renderTrace(now);
     octx.clearRect(0, 0, W, H);
     if (mode === 'match') renderMatch(octx);
-    renderParts(octx);
+    renderConfetti(octx);
   } catch (err) { cancelAnimationFrame(rafId); rafId = 0; showError(err.message || String(err)); }
 }
 $('homeBtn').addEventListener('click', goHome);
 $('prevBtn').addEventListener('click', function () { if (mode === 'trace') loadTrace(TR.idx - 1); });
 $('nextBtn').addEventListener('click', function () { if (mode === 'trace') loadTrace(TR.idx + 1); });
 $('showBtn').addEventListener('click', function () { if (mode === 'trace') startDemo(); });
-$('sayBtn').addEventListener('click', function () { if (mode === 'trace' && TR.item) say(TR.item.say[0], TR.item.say[1]); else if (GAME.say) GAME.say(); });
+$('sayBtn').addEventListener('click', function () { if (mode === 'trace' && TR.item) say(TR.item.say); else if (GAME.say) GAME.say(); });
 $('goBtn').addEventListener('click', function () { if (mode === 'trace') loadTrace(TR.idx + 1); else { GAME.round = 0; nextRound(); } });
 $('againBtn').addEventListener('click', function () { if (mode === 'trace') loadTrace(TR.idx); else { GAME.round = 0; nextRound(); } });
 window.addEventListener('resize', function () {
@@ -1173,8 +1147,7 @@ function buildTiles() {
     b.type = 'button';
     b.style.setProperty('--c', a.color);
     b.appendChild(el('div', 'ic', a.icon));
-    b.appendChild(el('div', 'nm', S.lang === 'fil' ? a.fil : a.en));
-    if (S.lang === 'both') b.appendChild(el('div', 'nm2', a.fil));
+    b.appendChild(el('div', 'nm', a.name));
     b.appendChild(el('div', 'st', '⭐ ' + (stars[k] || 0)));
     b.addEventListener('click', function () { sfx.tick(); startAct(k); });
     box.appendChild(b);
@@ -1193,12 +1166,14 @@ function seg(id, items, get, set) {
 }
 function openGrown() {
   seg('setAge', [['nursery', 'Nursery · 3'], ['prek', 'Pre-K · 4'], ['kinder', 'Kinder · 5']], function () { return S.age; }, function (v) { S.age = v; save('age', v); });
-  seg('setLang', [['en', 'English'], ['fil', 'Filipino'], ['both', 'Both']], function () { return S.lang; }, function (v) { S.lang = v; save('lang', v); });
   seg('setSound', [[true, 'On'], [false, 'Off']], function () { return S.sound; }, function (v) { S.sound = v; save('sound', v); });
   seg('setVoice', [[true, 'On'], [false, 'Off']], function () { return S.voice; }, function (v) { S.voice = v; save('voice', v); if (!v) stopVoice(); });
-  seg('setVoiceLang', [['en', 'English'], ['fil', 'Filipino'], ['both', 'Both']], function () { return S.voiceLang; }, function (v) { S.voiceLang = v; save('voiceLang', v); sayOne("Hi! Let's play!", 'Hello! Maglaro tayo!'); });
-  seg('setVoiceStyle', [['jolly', 'Jolly'], ['calm', 'Calm']], function () { return S.voiceStyle; }, function (v) { S.voiceStyle = v; save('voiceStyle', v); sayOne("Hi! Let's play!", 'Hello! Maglaro tayo!'); });
+  seg('setVoiceStyle', [['jolly', 'Jolly'], ['calm', 'Calm']], function () { return S.voiceStyle; }, function (v) { S.voiceStyle = v; save('voiceStyle', v); say("Hi there! Let's play!"); });
   $('resetStars').textContent = 'Reset stars';
+  const A = window.TuldokAndroid;
+  let ver = 'web preview';
+  try { if (A && typeof A.version === 'function') ver = 'app version ' + A.version(); } catch (e) { /* ignore */ }
+  $('version').textContent = 'Tuldok ' + ver;
   $('grown').hidden = false;
 }
 function closeGrown() { $('grown').hidden = true; buildTiles(); }

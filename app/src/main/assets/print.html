@@ -152,7 +152,7 @@ button:disabled { opacity: .55; cursor: progress; }
   <section class="panel p-learn" aria-labelledby="h-learn">
     <h2 class="ph" id="h-learn">Learners and activity</h2>
     <div class="field"><span class="lab" id="lab-age">Age group</span><div class="seg" id="age" role="group" aria-labelledby="lab-age"></div></div>
-    <div class="field"><span class="lab" id="lab-lang">Language on the sheet</span><div class="seg" id="lang" role="group" aria-labelledby="lab-lang"></div></div>
+    <div class="field" hidden><span class="lab" id="lab-lang">Language on the sheet</span><div class="seg" id="lang" role="group" aria-labelledby="lab-lang"></div></div>
     <div class="fields" id="typeOptions"></div>
     <div class="field" id="supportField"><label for="support">Tracing help</label><select id="support"></select></div>
     <div class="field"><span class="lab" id="lab-pic">Pictures</span><div class="seg" id="pic" role="group" aria-labelledby="lab-pic"></div></div>
@@ -1025,7 +1025,7 @@ const TYPES = {
   letters: {
     name: 'Letters', sub: 'Trace A to Z', hash: 'letters', tracing: true,
     options: [
-      { key: 'letter', label: 'Letter', def: 'A', choices: [['all-en', 'Whole alphabet A to Z (26 pages)'], ['all-fil', 'Filipino alphabet with Ñ and NG (28 pages)']].concat(ALPHA_FIL.map(function (L) { return [L, L === 'NG' ? 'NG ng' : L + ' ' + L.toLowerCase()]; })) },
+      { key: 'letter', label: 'Letter', def: 'A', choices: [['all-en', 'Whole alphabet A to Z (26 pages)']].concat(ALPHA_EN.map(function (L) { return [L, L + ' ' + L.toLowerCase()]; })) },
       { key: 'kase', label: 'Case', def: 'both', choices: CASES },
     ],
     multipage(o) { return o.letter === 'all-en' ? 26 : o.letter === 'all-fil' ? 28 : 0; },
@@ -1222,7 +1222,7 @@ const TYPES = {
 
   shapes: {
     name: 'Shapes', sub: 'Trace shapes', hash: 'shapes', tracing: true,
-    options: [{ key: 'shape', label: 'Shape', def: 'mixed', choices: [['mixed', 'Mixed set, by age']].concat(Object.keys(SHAPES).map(function (k) { return [k, cap(SHAPES[k].en) + ' / ' + SHAPES[k].fil]; })) }],
+    options: [{ key: 'shape', label: 'Shape', def: 'mixed', choices: [['mixed', 'Mixed set, by age']].concat(Object.keys(SHAPES).map(function (k) { return [k, cap(SHAPES[k].en)]; })) }],
     tip: 'Name the shape, trace it, then go on a shape hunt around the classroom. Say the moves aloud while tracing a square: down, across, up, back.',
     words(o) {
       const k = o.shape === 'mixed' ? null : SHAPES[o.shape];
@@ -1355,7 +1355,7 @@ const TYPES = {
   hunt: {
     name: 'Letter hunt', sub: 'Find and circle', hash: 'letter-hunt',
     options: [
-      { key: 'hletter', label: 'Letter', def: 'B', choices: ALPHA_EN.concat(['Ñ']).map(function (L) { return [L, L + ' ' + L.toLowerCase()]; }) },
+      { key: 'hletter', label: 'Letter', def: 'B', choices: ALPHA_EN.map(function (L) { return [L, L + ' ' + L.toLowerCase()]; }) },
       { key: 'hkase', label: 'Case', def: 'both', choices: CASES },
     ],
     tip: 'Letter hunts train the eye for reading. Kinder sheets mix in look-alike letters such as b, d and p on purpose. Afterwards, count the circled letters together.',
@@ -1480,9 +1480,9 @@ const TYPES = {
 
 /* ================= app state ================= */
 const LS_KEY = 'tuldok-worksheets-v1';
-const DEFAULTS = { type: 'letters', age: 'prek', lang: 'both', support: 'fade', pic: 'line', paper: 'a4', pages: 1, nameLine: true, school: '', seed: 1, opts: {} };
+const DEFAULTS = { type: 'letters', age: 'prek', lang: 'en', support: 'fade', pic: 'line', paper: 'a4', pages: 1, nameLine: true, school: '', seed: 1, opts: {} };
 const SUPPORT = [['fade', 'Fade row by row (recommended)'], ['solid', 'Solid gray to trace over'], ['dots', 'Dotted lines'], ['dash', 'Dashed lines']];
-const LANGS = [['en', 'English'], ['fil', 'Filipino'], ['both', 'Both']];
+const LANGS = [['en', 'English']];
 const PICS = [['line', 'Outlines to color'], ['color', 'Color pictures']];
 let page = 0, raf = 0, lastErr = null;
 let st = loadState();

@@ -1,6 +1,6 @@
 # Tuldok
 
-Touch-screen learning games for Nursery, Pre-K and Kinder, in English, Filipino or both, plus a printable worksheet maker for teachers.
+Touch-screen learning games for Nursery, Pre-K and Kinder, plus a printable worksheet maker for teachers. English only.
 
 ## What's inside
 
@@ -11,9 +11,9 @@ Touch-screen learning games for Nursery, Pre-K and Kinder, in English, Filipino 
 - **Match:** drag a line between pictures, big and small letters, or numbers and dots.
 - **What's next?:** finish the pattern.
 
-The app reads instructions aloud with the device's text-to-speech voice and gives stars for finished games.
+A cheerful voice reads every instruction aloud, and finished games earn stars.
 
-**For grown-ups:** press and hold the gear on the home screen to change age group, language, sound and voice, or to open the printable worksheet maker (`print.html`). That page can Save, Print or Share PDFs.
+**For grown-ups:** press and hold the gear on the home screen to change age group, sounds, voice and voice style, or to open the printable worksheet maker (`print.html`). That page can Save, Print or Share PDFs. The menu also shows the installed app version.
 
 ## Get the APK
 
@@ -36,6 +36,6 @@ app/src/main/java/ph/tuldok/app/        MainActivity: WebView, voice, save/print
 
 ## Notes
 
+- **Voice.** Many speech engines ignore pitch settings, so the app renders each line to a sound file with the device's text-to-speech engine and plays it back at a higher pitch. "Jolly" raises the pitch; "Calm" plays it as is.
 - **Signing.** The first build creates a test key and keeps it on a pre-release named `signing-key`, so later builds can update the installed app. Anyone who can see the repo can download that key. Before giving the app to schools, switch to a release key stored in GitHub Secrets.
-- **Voice.** Uses the device's text-to-speech engine. Filipino needs a Filipino voice installed; if there isn't one, the app falls back to the default voice.
 - **Fonts.** Titles use Google Fonts when online and the device font offline. Traced letters are drawn by the app, so they look the same either way.

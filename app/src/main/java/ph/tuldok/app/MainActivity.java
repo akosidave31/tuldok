@@ -5,6 +5,9 @@ import android.content.ClipData;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioAttributes;
+import android.media.MediaPlayer;
+import android.media.PlaybackParams;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -18,6 +21,7 @@ import android.print.PrintDocumentInfo;
 import android.print.PrintManager;
 import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.util.Base64;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
@@ -38,12 +42,18 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayDeque;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Tuldok: the touch games (assets/index.html) and the printable worksheet maker (assets/print.html) in a WebView.
- * The pages can call TuldokAndroid.speak(text, "en"|"fil") for the voice, and
- * begin(name) / append(base64) / done("save|a4" | "print|short" | "share|long") to hand over a PDF.
+ *
+ * Voice: many speech engines ignore setPitch(), so each line is first rendered to a WAV file,
+ * then played with MediaPlayer at a raised pitch (PlaybackParams), which works with any engine.
+ *
+ * PDFs: the page hands them over with begin(name) / append(base64) / done("save|a4" | "print|short" | "share|long").
  */
 public class MainActivity extends Activity {
 
@@ -51,10 +61,20 @@ public class MainActivity extends Activity {
             new PrintAttributes.MediaSize("PH_LONG_BOND", "Long bond 8.5 x 13 in", 8500, 13000);
 
     private WebView web;
+
+    // ---- voice ----
     private TextToSpeech tts;
     private volatile boolean ttsReady = false;
-    private volatile float voicePitch = 1.35f;
+    private volatile float voicePitch = 1.4f;
     private volatile float voiceRate = 0.95f;
+    private volatile int speakGen = 0;
+    private final Map<String, File> pendingSpeech = new ConcurrentHashMap<>();
+    private final Map<String, Integer> pendingGen = new ConcurrentHashMap<>();
+    private final ArrayDeque<File> playQueue = new ArrayDeque<>();
+    private MediaPlayer player;
+    private boolean playing = false;
+
+    // ---- PDF hand-over ----
     private File pendingFile;
     private OutputStream pendingOut;
     private String pendingName = "worksheet.pdf";
@@ -92,7 +112,30 @@ public class MainActivity extends Activity {
         });
         web.addJavascriptInterface(new Bridge(), "TuldokAndroid");
 
-        tts = new TextToSpeech(this, status -> ttsReady = (status == TextToSpeech.SUCCESS));
+        tts = new TextToSpeech(this, status -> {
+            ttsReady = (status == TextToSpeech.SUCCESS);
+            if (ttsReady) {
+                tts.setLanguage(Locale.US);
+                tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                    @Override
+                    public void onStart(String utteranceId) { }
+
+                    @Override
+                    public void onDone(String utteranceId) {
+                        File f = pendingSpeech.remove(utteranceId);
+                        Integer gen = pendingGen.remove(utteranceId);
+                        if (f != null && gen != null) enqueue(f, gen);
+                    }
+
+                    @Override
+                    public void onError(String utteranceId) {
+                        File f = pendingSpeech.remove(utteranceId);
+                        pendingGen.remove(utteranceId);
+                        if (f != null) f.delete();
+                    }
+                });
+            }
+        });
 
         if (savedInstanceState != null) {
             web.restoreState(savedInstanceState);
@@ -122,29 +165,125 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (tts != null) tts.stop();
+        stopVoice();
     }
 
     @Override
     protected void onDestroy() {
+        stopVoice();
         if (tts != null) tts.shutdown();
         if (web != null) web.destroy();
         super.onDestroy();
     }
+
+    // ================= voice =================
+
+    private void speakLine(String text) {
+        if (tts == null || !ttsReady || text == null || text.isEmpty()) return;
+        final int gen = speakGen;
+        tts.setLanguage(Locale.US);
+        tts.setPitch(1.0f);              // pitch is raised during playback instead
+        tts.setSpeechRate(voiceRate);
+        String id = "line" + System.nanoTime();
+        File dir = new File(getCacheDir(), "voice");
+        if (!dir.isDirectory() && !dir.mkdirs()) {
+            tts.speak(text, TextToSpeech.QUEUE_ADD, null, id);
+            return;
+        }
+        File out = new File(dir, id + ".wav");
+        pendingSpeech.put(id, out);
+        pendingGen.put(id, gen);
+        int result = tts.synthesizeToFile(text, null, out, id);
+        if (result != TextToSpeech.SUCCESS) {
+            pendingSpeech.remove(id);
+            pendingGen.remove(id);
+            tts.speak(text, TextToSpeech.QUEUE_ADD, null, id);   // fall back to plain speech
+        }
+    }
+
+    private void enqueue(final File f, final int gen) {
+        runOnUiThread(() -> {
+            if (gen != speakGen) {
+                f.delete();
+                return;
+            }
+            playQueue.add(f);
+            if (!playing) playNext();
+        });
+    }
+
+    /** Runs on the UI thread. */
+    private void playNext() {
+        releasePlayer();
+        final File f = playQueue.poll();
+        if (f == null) {
+            playing = false;
+            return;
+        }
+        playing = true;
+        try {
+            player = new MediaPlayer();
+            player.setAudioAttributes(new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .build());
+            player.setDataSource(f.getAbsolutePath());
+            player.setOnCompletionListener(mp -> {
+                f.delete();
+                playNext();
+            });
+            player.setOnErrorListener((mp, what, extra) -> {
+                f.delete();
+                playNext();
+                return true;
+            });
+            player.prepare();
+            try {
+                // On a prepared player, a non-zero speed here also starts playback.
+                player.setPlaybackParams(new PlaybackParams().setPitch(voicePitch).setSpeed(1.0f));
+            } catch (Exception ignored) {
+                // This device can't change pitch; play it as it is.
+            }
+            if (!player.isPlaying()) player.start();
+        } catch (Exception e) {
+            f.delete();
+            playNext();
+        }
+    }
+
+    private void releasePlayer() {
+        if (player != null) {
+            try {
+                player.setOnCompletionListener(null);
+                player.setOnErrorListener(null);
+                player.release();
+            } catch (Exception ignored) {
+                // Already released.
+            }
+            player = null;
+        }
+    }
+
+    /** Stops speech now and drops anything still being prepared. Safe from any thread. */
+    private void stopVoice() {
+        speakGen++;
+        if (tts != null) tts.stop();
+        runOnUiThread(() -> {
+            for (File f : playQueue) f.delete();
+            playQueue.clear();
+            releasePlayer();
+            playing = false;
+        });
+    }
+
+    // ================= bridge for the pages =================
 
     /** Methods the pages can call. They run on a background thread, so UI work goes through runOnUiThread. */
     public class Bridge {
 
         @JavascriptInterface
         public void speak(String text, String lang) {
-            if (tts == null || !ttsReady || text == null || text.isEmpty()) return;
-            int result = tts.setLanguage("fil".equals(lang) ? new Locale("fil", "PH") : Locale.US);
-            if ("fil".equals(lang) && (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED)) {
-                tts.setLanguage(new Locale("tl", "PH"));
-            }
-            tts.setPitch(voicePitch);
-            tts.setSpeechRate(voiceRate);
-            tts.speak(text, TextToSpeech.QUEUE_ADD, null, "tuldok-" + System.nanoTime());
+            speakLine(text);
         }
 
         /** Pitch above 1.0 sounds brighter and friendlier to young children. */
@@ -156,7 +295,16 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void stopSpeaking() {
-            if (tts != null) tts.stop();
+            stopVoice();
+        }
+
+        @JavascriptInterface
+        public String version() {
+            try {
+                return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+            } catch (Exception e) {
+                return "?";
+            }
         }
 
         @JavascriptInterface
@@ -213,6 +361,8 @@ public class MainActivity extends Activity {
             });
         }
     }
+
+    // ================= PDF save / share / print =================
 
     private void closePending() {
         if (pendingOut != null) {
