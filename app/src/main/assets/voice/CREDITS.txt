@@ -1,0 +1,2 @@
+Voice clips generated with Chatterbox by Resemble AI (MIT), exaggeration 0.9, cfg 0.35.
+Chatterbox: https://github.com/resemble-ai/chatterbox (MIT License). Clips carry Resemble AI's inaudible Perth watermark.
