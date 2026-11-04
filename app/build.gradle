@@ -1,0 +1,51 @@
+plugins {
+    id 'com.android.application'
+}
+
+// The CI workflow downloads (or creates once) this test key so every build can update the installed app.
+def testKey = file('tuldok-test.keystore')
+def runNumber = (System.getenv('GITHUB_RUN_NUMBER') ?: '1') as int
+
+android {
+    namespace 'ph.tuldok.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'ph.tuldok.app'
+        minSdk 26
+        targetSdk 34
+        versionCode runNumber
+        versionName "0.1.${runNumber}"
+    }
+
+    signingConfigs {
+        tuldokTest {
+            storeFile testKey
+            storeType 'pkcs12'
+            storePassword 'tuldok-test'
+            keyAlias 'tuldok'
+            keyPassword 'tuldok-test'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig testKey.exists() ? signingConfigs.tuldokTest : signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core:1.13.1'
+}

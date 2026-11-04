@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tuldok Worksheet Maker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:ital,wght@0,400;0,700;1,400&amp;family=Fredoka:wght@500;600;700&amp;display=swap">
+<style>
+:root {
+  /* Layout idea: a settings rail beside a live paper preview; on phones the rail stacks above the preview and Download stays pinned at the bottom. */
+  --paper: #f5f7f4;
+  --card: #ffffff;
+  --ink: #1c2a33;
+  --muted: #566672;
+  --line: #d6dfe6;
+  --rule: #9bbfe6;
+  --go: #17834a;
+  --go-soft: #e3f2e9;
+  --on-go: #ffffff;
+  --font-display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "Andika", "Segoe UI", Roboto, system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f151a; --card: #172028; --ink: #e4ecf1; --muted: #9db0bd; --line: #293641;
+    --rule: #41689a; --go: #45c480; --go-soft: #15302a; --on-go: #0a1810;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0f151a; --card: #172028; --ink: #e4ecf1; --muted: #9db0bd; --line: #293641;
+  --rule: #41689a; --go: #45c480; --go-soft: #15302a; --on-go: #0a1810;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background-color: var(--paper);
+  background-image: repeating-linear-gradient(to bottom, transparent 0 31px, color-mix(in srgb, var(--rule) 22%, transparent) 31px 32px);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.45;
+}
+h1, h2 { text-wrap: balance; }
+.top { max-width: 1280px; margin: 0 auto; padding: 18px 16px 6px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.logo { width: 46px; height: 46px; flex: none; }
+.logo .bg { fill: var(--go); }
+.logo .fg { fill: var(--on-go); }
+.logo .ring { fill: none; stroke: var(--on-go); stroke-width: 1.6; }
+h1 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 1.8rem; line-height: 1.05; }
+.brand p { margin: 3px 0 0; color: var(--muted); font-size: .95rem; }
+.app {
+  display: grid;
+  grid-template-columns: minmax(290px, 370px) minmax(0, 1fr);
+  grid-template-areas: "types preview" "learn preview" "page preview" "tip preview";
+  grid-template-rows: auto auto auto 1fr;
+  gap: 14px 22px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 10px 16px 40px;
+}
+.p-types { grid-area: types; }
+.p-learn { grid-area: learn; }
+.p-page { grid-area: page; }
+.p-tip { grid-area: tip; }
+.panel { align-self: start; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 12px; min-width: 0; }
+.ph { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; }
+.types { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.type-btn { appearance: none; font: inherit; text-align: left; color: var(--ink); background: var(--card); border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 10px; display: grid; gap: 1px; cursor: pointer; }
+.type-btn:hover { border-color: var(--rule); }
+.type-btn[aria-pressed="true"] { border-color: var(--go); background: var(--go-soft); box-shadow: inset 4px 0 0 var(--go); }
+.type-btn .tn { font-family: var(--font-display); font-weight: 600; font-size: 1rem; }
+.type-btn .ts { font-size: .8rem; line-height: 1.25; color: var(--muted); }
+.fields { display: grid; gap: 12px; }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field > label, .lab { font-size: .86rem; font-weight: 700; color: var(--muted); }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { appearance: none; font: inherit; font-size: .92rem; color: var(--ink); background: var(--card); border: 1.5px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.seg button:hover { border-color: var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--go); border-color: var(--go); color: var(--on-go); }
+select, input[type="text"] { width: 100%; min-width: 0; font: inherit; font-size: .95rem; color: var(--ink); background: var(--paper); border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.check { grid-template-columns: auto 1fr; align-items: center; gap: 10px; }
+.check input { width: 20px; height: 20px; margin: 0; accent-color: var(--go); }
+.check label { font-size: .95rem; font-weight: 400; color: var(--ink); }
+.p-tip { background: var(--go-soft); border-color: transparent; }
+.p-tip p { margin: 0; font-size: .95rem; max-width: 65ch; }
+.previewCol { grid-area: preview; align-self: start; position: sticky; top: 12px; display: grid; gap: 10px; min-width: 0; }
+.pbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.pnav { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .92rem; font-variant-numeric: tabular-nums; }
+.pnav button { width: 36px; height: 36px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); font-size: 1.3rem; line-height: 1; cursor: pointer; }
+.pnav button:disabled { opacity: .4; cursor: default; }
+.sheetWrap { padding: 14px; border-radius: 14px; background: color-mix(in srgb, var(--rule) 16%, var(--paper)); }
+.sheet { display: block; width: 100%; height: auto; background: #fff; border-radius: 3px; box-shadow: 0 1px 2px rgba(16, 36, 56, .14), 0 10px 26px rgba(16, 36, 56, .14); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.primary { flex: 1 1 200px; appearance: none; border: 0; border-radius: 12px; padding: 12px 18px; background: var(--go); color: var(--on-go); font-family: var(--font-display); font-weight: 600; font-size: 1.08rem; cursor: pointer; }
+.ghost { appearance: none; border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 14px; background: var(--card); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
+.ghost:hover { border-color: var(--rule); }
+button:disabled { opacity: .55; cursor: progress; }
+.status { margin: 0; min-height: 1.4em; color: var(--muted); font-size: .92rem; }
+:focus-visible { outline: 3px solid var(--rule); outline-offset: 2px; }
+#printArea { display: none; }
+@media (max-width: 860px) {
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-areas: "types" "learn" "preview" "page" "tip"; grid-template-rows: none; }
+  .previewCol { position: static; }
+  .types { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 4px; scroll-snap-type: x proximity; }
+  .type-btn { flex: 0 0 140px; scroll-snap-align: start; }
+  .actions { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: var(--card); border-top: 1px solid var(--line); }
+  body { padding-bottom: 86px; }
+}
+@media print {
+  body { background: #fff; padding: 0; }
+  body > *:not(#printArea) { display: none !important; }
+  #printArea { display: block !important; }
+  .print-page { display: block; break-after: page; page-break-after: always; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 40 40" aria-hidden="true">
+      <rect class="bg" x="1" y="1" width="38" height="38" rx="11"/>
+      <circle class="ring" cx="11" cy="28" r="4.8"/>
+      <circle class="fg" cx="11" cy="28" r="2.2"/>
+      <circle class="fg" cx="17.5" cy="21.5" r="2"/>
+      <circle class="fg" cx="23.5" cy="16.5" r="2"/>
+      <circle class="fg" cx="30" cy="13" r="2"/>
+    </svg>
+    <div>
+      <h1>Tuldok</h1>
+      <p>Printable worksheets for Nursery, Pre-K and Kinder</p>
+    </div>
+  </div>
+</header>
+
+<main class="app">
+  <section class="panel p-types" aria-labelledby="h-types">
+    <h2 class="ph" id="h-types">Worksheet</h2>
+    <div class="types" id="types" role="group" aria-labelledby="h-types"></div>
+  </section>
+
+  <section class="panel p-learn" aria-labelledby="h-learn">
+    <h2 class="ph" id="h-learn">Learners and activity</h2>
+    <div class="field"><span class="lab" id="lab-age">Age group</span><div class="seg" id="age" role="group" aria-labelledby="lab-age"></div></div>
+    <div class="field"><span class="lab" id="lab-lang">Language on the sheet</span><div class="seg" id="lang" role="group" aria-labelledby="lab-lang"></div></div>
+    <div class="fields" id="typeOptions"></div>
+    <div class="field" id="supportField"><label for="support">Tracing help</label><select id="support"></select></div>
+    <div class="field"><span class="lab" id="lab-pic">Pictures</span><div class="seg" id="pic" role="group" aria-labelledby="lab-pic"></div></div>
+  </section>
+
+  <section class="previewCol" aria-label="Preview">
+    <div class="pbar">
+      <div class="pnav">
+        <button type="button" id="prev" aria-label="Previous page">&#8249;</button>
+        <span id="pageLabel">Page 1 of 1</span>
+        <button type="button" id="next" aria-label="Next page">&#8250;</button>
+      </div>
+      <button type="button" id="shuffle" class="ghost">New version</button>
+    </div>
+    <div class="sheetWrap"><canvas id="sheet" class="sheet" width="840" height="1188" role="img" aria-label="Worksheet preview"></canvas></div>
+    <div class="actions" id="actions">
+      <button type="button" id="download" class="primary">Download PDF</button>
+      <button type="button" id="print" class="ghost" hidden>Print</button>
+      <button type="button" id="share" class="ghost" hidden>Share</button>
+    </div>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="panel p-page" aria-labelledby="h-page">
+    <h2 class="ph" id="h-page">Page setup</h2>
+    <div class="field"><label for="paper">Paper size</label><select id="paper"></select></div>
+    <div class="field" id="pagesField"><label for="pages">How many pages (each one different)</label><select id="pages"></select></div>
+    <div class="field check"><input type="checkbox" id="nameLine"><label for="nameLine">Name and date line</label></div>
+    <div class="field"><label for="school">School or teacher name, printed at the bottom</label><input type="text" id="school" maxlength="80" autocomplete="off" placeholder="Teacher Joy, Sampaguita Learning Center"></div>
+  </section>
+
+  <aside class="panel p-tip" aria-labelledby="h-tip">
+    <h2 class="ph" id="h-tip">Teacher's note</h2>
+    <p id="tipText"></p>
+  </aside>
+</main>
+<div id="printArea"></div>
+<style id="pageStyle"></style>
+<noscript><p style="padding:16px">Tuldok needs JavaScript to draw worksheets.</p></noscript>
+
+<script>
+(function () {
+'use strict';
+
+/* ================= helpers ================= */
+function status(msg) { const el = document.getElementById('status'); if (el) el.textContent = msg || ''; }
+window.addEventListener('error', function (e) { status('Error: ' + (e.message || 'unknown') + (e.lineno ? ' (line ' + e.lineno + ')' : '') + '. Please report this message.'); });
+window.addEventListener('unhandledrejection', function (e) { const r = e.reason; status('Error: ' + ((r && r.message) || r) + '. Please report this message.'); });
+
+function hashStr(s) { let h = 2166136261 >>> 0; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function mulberry32(seed) {
+  let a = seed | 0;
+  return function () {
+    a = (a + 0x6D2B79F5) | 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rInt = (r, a, b) => a + Math.floor(r() * (b - a + 1));
+const pick = (r, arr) => arr[Math.floor(r() * arr.length)];
+function shuffle(r, arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+function pairs(flat) { const out = []; for (let i = 0; i + 1 < flat.length; i += 2) out.push([flat[i], flat[i + 1]]); return out; }
+function starPoly(cx, cy, R, rIn) {
+  const out = [];
+  for (let i = 0; i < 10; i++) {
+    const a = (-90 + i * 36) * Math.PI / 180, rr = i % 2 ? rIn : R;
+    out.push(+(cx + rr * Math.cos(a)).toFixed(2), +(cy + rr * Math.sin(a)).toFixed(2));
+  }
+  return out;
+}
+
+/* ================= constants ================= */
+const PAPERS = {
+  a4: { label: 'A4 (210 × 297 mm)', w: 210, h: 297 },
+  short: { label: 'Short bond (8.5 × 11 in)', w: 215.9, h: 279.4 },
+  long: { label: 'Long bond (8.5 × 13 in)', w: 215.9, h: 330.2 },
+};
+const C = {
+  ink: '#1f2a30', soft: '#55616b', guide: '#8ea2b4', guideMid: '#b8c6d2', desc: '#dfe6ec',
+  trace: '#cdd4da', model: '#aab6c0', dot: '#7f8a93', go: '#1f9d55', goDark: '#15753f',
+  box: '#c8d2da', boxFill: '#f8fafb', sep: '#e2e8ed',
+};
+const FONT_D = '"Fredoka", "Trebuchet MS", system-ui, sans-serif';
+const FONT_B = '"Andika", "Segoe UI", Roboto, system-ui, sans-serif';
+const FONT_E = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+const AGES = {
+  nursery: { label: 'Nursery · 3', letterH: 30, letterH2: 24, numH: 32 },
+  prek: { label: 'Pre-K · 4', letterH: 24, letterH2: 20, numH: 26 },
+  kinder: { label: 'Kinder · 5', letterH: 18, letterH2: 16, numH: 20 },
+};
+
+/* ================= stroke font =================
+   Ball-and-stick manuscript letters, drawn the way children are taught to write them.
+   Units: top line y=0, midline y=50, baseline y=100, descender y=140.
+   Each string is one pen stroke, in teaching order:
+   M x y = start, L x y = line, C = cubic curve,
+   E cx cy rx ry a0 a1 = ellipse arc in screen degrees (0 = right, 90 = down; a1 < a0 means "circle back"),
+   D x y = a dot (as on i and j). */
+const GLYPH_SRC = {
+  A: [80, 'M40 0 L4 100', 'M40 0 L76 100', 'M18 62 L62 62'],
+  B: [64, 'M6 0 L6 100', 'M6 0 L32 0 E32 25 24 25 -90 90', 'M6 50 L36 50 E36 75 24 25 -90 90 L6 100'],
+  C: [82, 'E46 50 42 50 -40 -320'],
+  D: [70, 'M6 0 L6 100', 'M6 0 L26 0 E26 50 40 50 -90 90 L6 100'],
+  E: [58, 'M6 0 L6 100', 'M6 0 L54 0', 'M6 50 L46 50', 'M6 100 L54 100'],
+  F: [56, 'M6 0 L6 100', 'M6 0 L52 0', 'M6 50 L44 50'],
+  G: [90, 'E46 50 42 50 -40 -360 L62 50'],
+  H: [70, 'M6 0 L6 100', 'M64 0 L64 100', 'M6 50 L64 50'],
+  I: [40, 'M20 0 L20 100', 'M2 0 L38 0', 'M2 100 L38 100'],
+  J: [52, 'M44 0 L44 72 E24 72 20 28 0 170'],
+  K: [64, 'M6 0 L6 100', 'M60 0 L6 56 L62 100'],
+  L: [54, 'M6 0 L6 100 L50 100'],
+  M: [84, 'M6 0 L6 100', 'M6 0 L42 100 L78 0 L78 100'],
+  N: [68, 'M6 0 L6 100', 'M6 0 L62 100 L62 0'],
+  'Ñ': [68, 'M6 0 L6 100', 'M6 0 L62 100 L62 0', 'M12 -12 C18 -22 26 -22 32 -15 C38 -8 46 -8 54 -18'],
+  O: [90, 'E45 50 42 50 -90 -450'],
+  P: [62, 'M6 0 L6 100', 'M6 0 L32 0 E32 25 26 25 -90 90 L6 50'],
+  Q: [92, 'E45 50 42 50 -90 -450', 'M58 74 L88 102'],
+  R: [64, 'M6 0 L6 100', 'M6 0 L32 0 E32 25 26 25 -90 90 L6 50 L60 100'],
+  S: [64, 'M58 14 C52 4 42 0 32 0 C16 0 6 10 6 25 C6 40 20 46 32 50 C46 54 60 60 60 76 C60 90 48 100 32 100 C20 100 10 96 4 86'],
+  T: [64, 'M32 0 L32 100', 'M4 0 L60 0'],
+  U: [66, 'M6 0 L6 70 E33 70 27 30 180 0 L60 0'],
+  V: [72, 'M4 0 L36 100 L68 0'],
+  W: [100, 'M4 0 L26 100 L50 0 L74 100 L96 0'],
+  X: [68, 'M4 0 L64 100', 'M64 0 L4 100'],
+  Y: [68, 'M4 0 L34 50', 'M64 0 L34 50 L34 100'],
+  Z: [64, 'M4 0 L60 0 L4 100 L60 100'],
+  a: [58, 'E28 75 25 25 -30 -390', 'M53 50 L53 100'],
+  b: [58, 'M6 0 L6 100', 'E31 75 25 25 180 540'],
+  c: [54, 'E28 75 25 25 -40 -320'],
+  d: [58, 'E28 75 25 25 -30 -390', 'M53 0 L53 100'],
+  e: [56, 'M3 75 L53 75 E28 75 25 25 0 -320'],
+  f: [46, 'M46 10 C42 2 36 0 32 0 C26 0 22 6 22 14 L22 100', 'M6 50 L40 50'],
+  g: [58, 'E28 75 25 25 -30 -390', 'M53 50 L53 124 E33 124 20 16 0 170'],
+  h: [58, 'M6 0 L6 100', 'M6 72 E29 72 23 22 180 360 L52 100'],
+  i: [16, 'M8 50 L8 100', 'D8 28'],
+  j: [40, 'M34 50 L34 124 E18 124 16 16 0 170', 'D34 28'],
+  k: [54, 'M6 0 L6 100', 'M48 50 L6 78 L50 100'],
+  l: [16, 'M8 0 L8 100'],
+  m: [80, 'M6 50 L6 100', 'M6 70 E23 70 17 20 180 360 L40 100', 'M40 70 E57 70 17 20 180 360 L74 100'],
+  n: [58, 'M6 50 L6 100', 'M6 72 E29 72 23 22 180 360 L52 100'],
+  'ñ': [58, 'M6 50 L6 100', 'M6 72 E29 72 23 22 180 360 L52 100', 'M8 34 C14 24 22 24 28 30 C34 36 42 36 50 26'],
+  o: [56, 'E28 75 25 25 -90 -450'],
+  p: [58, 'M6 50 L6 140', 'E31 75 25 25 180 540'],
+  q: [58, 'E28 75 25 25 -30 -390', 'M53 50 L53 140'],
+  r: [46, 'M6 50 L6 100', 'M6 72 E26 72 20 22 180 320'],
+  s: [52, 'M44 58 C40 52 34 50 28 50 C18 50 10 55 10 63 C10 71 20 74 28 75 C38 76 46 80 46 88 C46 96 38 100 28 100 C20 100 12 97 8 92'],
+  t: [42, 'M20 10 L20 100', 'M4 50 L38 50'],
+  u: [58, 'M6 50 L6 76 E29 76 23 24 180 0', 'M52 50 L52 100'],
+  v: [56, 'M4 50 L28 100 L52 50'],
+  w: [76, 'M4 50 L20 100 L38 50 L56 100 L72 50'],
+  x: [54, 'M4 50 L50 100', 'M50 50 L4 100'],
+  y: [56, 'M4 50 L28 100', 'M52 50 L9 140'],
+  z: [54, 'M4 50 L48 50 L4 100 L50 100'],
+  '0': [60, 'E30 50 26 50 -90 -450'],
+  '1': [40, 'M10 18 L28 0 L28 100'],
+  '2': [64, 'M6 24 C8 8 20 0 32 0 C46 0 58 10 58 26 C58 44 40 60 6 100 L60 100'],
+  '3': [64, 'M8 14 C14 4 22 0 32 0 C46 0 56 10 56 24 C56 38 46 48 30 48 C48 48 60 60 60 74 C60 90 48 100 32 100 C20 100 10 94 6 86'],
+  '4': [64, 'M10 0 L4 64 L60 64', 'M44 0 L44 100'],
+  '5': [64, 'M10 0 L8 44 C16 38 24 36 32 36 C48 36 60 48 60 66 C60 86 48 100 30 100 C18 100 10 94 4 86', 'M10 0 L56 0'],
+  '6': [64, 'M50 6 C44 2 38 0 32 0 C14 0 5 24 5 72 E32 72 27 28 180 -180'],
+  '7': [62, 'M4 0 L58 0 L20 100'],
+  '8': [64, 'M52 14 C48 4 40 0 32 0 C18 0 8 10 8 24 C8 38 18 46 32 50 C48 54 58 64 58 76 C58 90 46 100 32 100 C18 100 6 90 6 76 C6 64 16 54 32 50 C46 46 56 38 56 24 C56 18 54 16 52 14'],
+  '9': [62, 'E30 28 26 28 -30 -390', 'M56 28 L56 100'],
+};
+const ARGC = { M: 2, L: 2, C: 6, E: 6, D: 2 };
+function parseStroke(src) {
+  const tok = src.match(/[MLCED]|-?\d*\.?\d+/g) || [];
+  const pts = [];
+  let x = 0, y = 0, dot = false, i = 0;
+  while (i < tok.length) {
+    const c = tok[i++], n = ARGC[c];
+    if (n === undefined) break;
+    const a = [];
+    for (let k = 0; k < n; k++) a.push(parseFloat(tok[i++]));
+    if (c === 'M' || c === 'L') { x = a[0]; y = a[1]; pts.push([x, y]); }
+    else if (c === 'D') { x = a[0]; y = a[1]; pts.push([x, y]); dot = true; }
+    else if (c === 'C') {
+      const x0 = x, y0 = y;
+      for (let k = 1; k <= 20; k++) {
+        const t = k / 20, m = 1 - t;
+        pts.push([
+          m * m * m * x0 + 3 * m * m * t * a[0] + 3 * m * t * t * a[2] + t * t * t * a[4],
+          m * m * m * y0 + 3 * m * m * t * a[1] + 3 * m * t * t * a[3] + t * t * t * a[5],
+        ]);
+      }
+      x = a[4]; y = a[5];
+    } else if (c === 'E') {
+      const cx = a[0], cy = a[1], rx = a[2], ry = a[3], a0 = a[4], a1 = a[5];
+      const segs = Math.max(6, Math.ceil(Math.abs(a1 - a0) / 5));
+      for (let k = 0; k <= segs; k++) {
+        const ang = (a0 + (a1 - a0) * k / segs) * Math.PI / 180;
+        pts.push([cx + rx * Math.cos(ang), cy + ry * Math.sin(ang)]);
+      }
+      const ae = a1 * Math.PI / 180;
+      x = cx + rx * Math.cos(ae); y = cy + ry * Math.sin(ae);
+    }
+  }
+  return { pts: pts, dot: dot };
+}
+const GL = {};
+Object.keys(GLYPH_SRC).forEach(function (key) {
+  const src = GLYPH_SRC[key];
+  const strokes = src.slice(1).map(parseStroke);
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  strokes.forEach(function (sk) { sk.pts.forEach(function (p) { minX = Math.min(minX, p[0]); maxX = Math.max(maxX, p[0]); minY = Math.min(minY, p[1]); maxY = Math.max(maxY, p[1]); }); });
+  GL[key] = { w: src[0], strokes: strokes, box: { minX: minX, minY: minY, maxX: maxX, maxY: maxY } };
+});
+
+/* ================= line-art pictures (100 × 100 boxes) =================
+   p = closed path, o = open line, c = circle, e = ellipse, g = polygon,
+   f = filled polygon, d = filled dot. Drawn in order, white-filled, so later parts cover earlier ones. */
+function sunIcon() {
+  const sh = [];
+  for (let i = 0; i < 8; i++) {
+    const a = i * Math.PI / 4;
+    sh.push(['o', 'M' + (50 + 29 * Math.cos(a)).toFixed(1) + ' ' + (50 + 29 * Math.sin(a)).toFixed(1) + ' L' + (50 + 43 * Math.cos(a)).toFixed(1) + ' ' + (50 + 43 * Math.sin(a)).toFixed(1)]);
+  }
+  sh.push(['c', 50, 50, 22], ['d', 42, 46, 2.6], ['d', 58, 46, 2.6], ['o', 'M41 56 C46 62 54 62 59 56']);
+  return sh;
+}
+function flowerIcon() {
+  const sh = [['o', 'M50 56 L50 95'], ['p', 'M50 82 C40 72 28 74 24 78 C32 88 44 88 50 82 Z']];
+  for (let i = 0; i < 6; i++) {
+    const a = i * Math.PI / 3 - Math.PI / 2;
+    sh.push(['c', +(50 + 17 * Math.cos(a)).toFixed(1), +(36 + 17 * Math.sin(a)).toFixed(1), 11]);
+  }
+  sh.push(['c', 50, 36, 9]);
+  return sh;
+}
+const ICONS = {
+  apple: [['o', 'M50 30 C50 22 52 15 57 9'], ['p', 'M50 30 C40 20 16 22 15 48 C14 74 34 92 50 86 C66 92 86 74 85 48 C84 22 60 20 50 30 Z'], ['p', 'M55 21 C61 11 72 9 80 12 C74 22 63 25 55 21 Z']],
+  star: [['g'].concat(starPoly(50, 54, 44, 19))],
+  heart: [['p', 'M50 88 C22 68 10 50 14 34 C18 18 40 14 50 32 C60 14 82 18 86 34 C90 50 78 68 50 88 Z']],
+  ball: [['c', 50, 50, 38], ['o', 'M50 12 C35 30 35 70 50 88'], ['o', 'M50 12 C65 30 65 70 50 88'], ['o', 'M13 42 C35 52 65 52 87 42']],
+  fish: [['g', 70, 50, 93, 31, 87, 50, 93, 69], ['p', 'M10 50 C24 26 56 24 76 50 C56 76 24 74 10 50 Z'], ['o', 'M42 38 C47 45 47 55 42 62'], ['d', 27, 46, 3.6]],
+  flower: flowerIcon(),
+  sun: sunIcon(),
+  cloud: [['p', 'M26 72 C12 72 10 54 24 52 C22 38 40 30 50 40 C56 26 80 28 80 46 C94 46 94 72 78 72 Z']],
+  house: [['g', 22, 48, 78, 48, 78, 90, 22, 90], ['g', 12, 50, 50, 16, 88, 50], ['g', 40, 90, 40, 66, 54, 66, 54, 90], ['g', 62, 58, 72, 58, 72, 68, 62, 68]],
+  tree: [['g', 43, 92, 43, 60, 57, 60, 57, 92], ['p', 'M30 64 C14 64 12 44 24 40 C20 24 38 14 50 22 C62 14 80 24 76 40 C88 44 86 64 70 64 Z']],
+  balloon: [['o', 'M50 70 C44 78 56 86 50 96'], ['g', 46, 72, 54, 72, 50, 66], ['e', 50, 38, 24, 30], ['o', 'M37 27 C39 21 43 17 48 15']],
+  leaf: [['p', 'M18 82 C18 42 46 16 84 16 C84 54 58 82 18 82 Z'], ['o', 'M18 82 L66 34']],
+  moon: [['p', 'M60 14 A36 36 0 1 0 86 64 A30 30 0 0 1 60 14 Z']],
+  umbrella: [['o', 'M50 44 L50 84 A6 6 0 0 1 38 84'], ['p', 'M14 52 A36 36 0 0 1 86 52 A12 8 0 0 0 62 52 A12 8 0 0 0 38 52 A12 8 0 0 0 14 52 Z'], ['o', 'M50 16 L50 9']],
+  car: [['p', 'M8 66 L8 52 C8 48 12 46 16 46 L28 46 L38 30 L66 30 L78 46 L86 46 C90 46 92 50 92 54 L92 66 Z'], ['g', 39, 34, 50, 34, 50, 46, 32, 46], ['g', 54, 34, 64, 34, 73, 46, 54, 46], ['c', 28, 68, 10], ['c', 72, 68, 10], ['c', 28, 68, 3.5], ['c', 72, 68, 3.5]],
+  boat: [['o', 'M50 64 L50 12'], ['g', 54, 16, 54, 58, 82, 58], ['g', 46, 24, 46, 58, 24, 58], ['g', 10, 64, 90, 64, 76, 84, 24, 84], ['o', 'M6 92 C14 86 22 86 30 92 C38 98 46 98 54 92 C62 86 70 86 78 92 C84 96 90 96 94 92']],
+  butterfly: [['p', 'M48 46 C36 18 10 18 12 38 C14 52 32 54 48 50 Z'], ['p', 'M48 54 C30 56 20 72 28 80 C38 88 46 70 48 58 Z'], ['p', 'M52 46 C64 18 90 18 88 38 C86 52 68 54 52 50 Z'], ['p', 'M52 54 C70 56 80 72 72 80 C62 88 54 70 52 58 Z'], ['c', 30, 37, 5], ['c', 70, 37, 5], ['e', 50, 54, 5, 22], ['o', 'M48 34 C44 24 40 20 36 17'], ['o', 'M52 34 C56 24 60 20 64 17'], ['d', 36, 17, 2.6], ['d', 64, 17, 2.6]],
+  cat: [['g', 22, 46, 25, 12, 46, 30], ['g', 78, 46, 75, 12, 54, 30], ['e', 50, 57, 32, 28], ['d', 38, 52, 3.6], ['d', 62, 52, 3.6], ['f', 46, 62, 54, 62, 50, 67], ['o', 'M50 67 C48 72 43 73 40 70'], ['o', 'M50 67 C52 72 57 73 60 70'], ['o', 'M30 62 L10 58'], ['o', 'M30 67 L10 69'], ['o', 'M70 62 L90 58'], ['o', 'M70 67 L90 69']],
+  bird: [['g', 22, 56, 6, 46, 10, 64], ['e', 44, 60, 24, 18], ['c', 66, 40, 13], ['g', 78, 37, 92, 41, 78, 45], ['d', 69, 37, 2.6], ['p', 'M32 58 C40 48 54 50 58 60 C48 66 38 66 32 58 Z'], ['o', 'M40 77 L38 88'], ['o', 'M50 77 L52 88']],
+  bee: [['e', 40, 32, 12, 16], ['e', 58, 30, 12, 16], ['g', 21, 55, 9, 58, 21, 61], ['e', 48, 58, 28, 20], ['o', 'M40 39 L40 77'], ['o', 'M54 39 L54 77'], ['c', 78, 56, 10], ['d', 81, 53, 2.2], ['o', 'M80 47 C82 40 86 36 90 35']],
+  kite: [['o', 'M50 86 C42 90 56 94 48 99'], ['g', 50, 6, 78, 40, 50, 86, 22, 40], ['o', 'M50 6 L50 86'], ['o', 'M22 40 L78 40']],
+  mango: [['o', 'M36 28 L32 17'], ['p', 'M30 32 C48 12 84 22 84 54 C84 82 56 94 36 82 C20 72 16 46 30 32 Z'], ['p', 'M34 20 C42 8 58 8 66 12 C58 22 44 24 34 20 Z']],
+  icecream: [['g', 32, 50, 68, 50, 50, 94], ['o', 'M40 52 L58 70'], ['o', 'M60 52 L42 70'], ['p', 'M28 52 C22 30 38 16 50 16 C62 16 78 30 72 52 C66 48 60 56 54 52 C48 48 42 56 36 52 C32 50 30 54 28 52 Z'], ['c', 50, 13, 5]],
+  egg: [['p', 'M50 12 C70 12 82 44 82 62 C82 80 68 90 50 90 C32 90 18 80 18 62 C18 44 30 12 50 12 Z']],
+  cup: [['p', 'M74 40 C92 40 92 70 74 70 L74 62 C83 62 83 48 74 48 Z'], ['p', 'M22 30 L78 30 L74 80 C73 86 68 90 62 90 L38 90 C32 90 27 86 26 80 Z'], ['o', 'M40 22 C36 16 44 12 40 6'], ['o', 'M56 22 C52 16 60 12 56 6']],
+};
+const EMOJI = {
+  apple: '🍎', star: '⭐', heart: '❤️', ball: '⚽', fish: '🐟', flower: '🌼', sun: '☀️', cloud: '☁️', house: '🏠',
+  tree: '🌳', balloon: '🎈', leaf: '🍃', moon: '🌙', umbrella: '☂️', car: '🚗', boat: '⛵', butterfly: '🦋', cat: '🐱',
+  bird: '🐦', bee: '🐝', kite: '🪁', mango: '🥭', icecream: '🍦', egg: '🥚', cup: '☕',
+};
+const NAMES = {
+  apple: ['apple', 'mansanas'], star: ['star', 'bituin'], heart: ['heart', 'puso'], ball: ['ball', 'bola'], fish: ['fish', 'isda'],
+  flower: ['flower', 'bulaklak'], sun: ['sun', 'araw'], cloud: ['cloud', 'ulap'], house: ['house', 'bahay'], tree: ['tree', 'puno'],
+  balloon: ['balloon', 'lobo'], leaf: ['leaf', 'dahon'], moon: ['moon', 'buwan'], umbrella: ['umbrella', 'payong'], car: ['car', 'kotse'],
+  boat: ['boat', 'bangka'], butterfly: ['butterfly', 'paru-paro'], cat: ['cat', 'pusa'], bird: ['bird', 'ibon'], bee: ['bee', 'bubuyog'],
+  kite: ['kite', 'saranggola'], mango: ['mango', 'mangga'], icecream: ['ice cream', 'sorbetes'], egg: ['egg', 'itlog'], cup: ['cup', 'tasa'],
+};
+
+/* ================= drawing primitives (units: millimetres) ================= */
+function strokePoly(ctx, P, width, color, dash) {
+  if (!P || P.length < 2) return;
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(P[0][0], P[0][1]);
+  for (let i = 1; i < P.length; i++) ctx.lineTo(P[i][0], P[i][1]);
+  ctx.lineWidth = width; ctx.strokeStyle = color; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if (dash) ctx.setLineDash(dash);
+  ctx.stroke();
+  ctx.restore();
+}
+function fillCircle(ctx, x, y, r, color) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill(); }
+function strokeCircle(ctx, x, y, r, w, color) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.lineWidth = w; ctx.strokeStyle = color; ctx.stroke(); }
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function panelBox(ctx, x, y, w, h) { roundRect(ctx, x, y, w, h, 4); ctx.fillStyle = C.boxFill; ctx.fill(); ctx.lineWidth = 0.35; ctx.strokeStyle = C.box; ctx.stroke(); }
+function arrowHead(ctx, x, y, dx, dy, size, color) {
+  const nx = -dy, ny = dx;
+  ctx.beginPath();
+  ctx.moveTo(x + dx * size, y + dy * size);
+  ctx.lineTo(x - dx * size * 0.6 + nx * size * 0.7, y - dy * size * 0.6 + ny * size * 0.7);
+  ctx.lineTo(x - dx * size * 0.6 - nx * size * 0.7, y - dy * size * 0.6 - ny * size * 0.7);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+function fontStr(o, size) { return (o.italic ? 'italic ' : '') + (o.weight || 400) + ' ' + size + 'px ' + (o.font || FONT_B); }
+function text(ctx, s, x, y, o) {
+  o = o || {};
+  ctx.save();
+  let size = o.size || 4;
+  ctx.font = fontStr(o, size);
+  if (o.maxWidth) {
+    let guard = 0;
+    while (size > 1.5 && ctx.measureText(s).width > o.maxWidth && guard++ < 40) { size *= 0.94; ctx.font = fontStr(o, size); }
+  }
+  ctx.fillStyle = o.color || C.ink;
+  ctx.textAlign = o.align || 'left';
+  ctx.textBaseline = o.baseline || 'alphabetic';
+  ctx.fillText(s, x, y);
+  ctx.restore();
+}
+function measure(ctx, s, size, weight, font) {
+  ctx.save();
+  ctx.font = (weight || 400) + ' ' + size + 'px ' + (font || FONT_B);
+  const w = ctx.measureText(s).width;
+  ctx.restore();
+  return w;
+}
+
+/* ---- polylines ---- */
+function polyLen(P) { let L = 0; for (let i = 1; i < P.length; i++) L += Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]); return L; }
+function evenPoints(P, spacing) {
+  const L = polyLen(P);
+  if (L < 1e-6) return [P[0]];
+  const n = Math.max(1, Math.round(L / spacing)), step = L / n;
+  const out = [P[0]];
+  let acc = 0, target = step;
+  for (let i = 1; i < P.length && out.length <= n; i++) {
+    const x0 = P[i - 1][0], y0 = P[i - 1][1], x1 = P[i][0], y1 = P[i][1];
+    const seg = Math.hypot(x1 - x0, y1 - y0);
+    if (seg <= 0) continue;
+    while (out.length <= n && acc + seg >= target - 1e-9) {
+      const t = (target - acc) / seg;
+      out.push([x0 + (x1 - x0) * t, y0 + (y1 - y0) * t]);
+      target += step;
+    }
+    acc += seg;
+  }
+  if (out.length < n + 1) out.push(P[P.length - 1]);
+  return out;
+}
+function pointAt(P, f) {
+  const L = polyLen(P), target = L * f;
+  let acc = 0;
+  for (let i = 1; i < P.length; i++) {
+    const x0 = P[i - 1][0], y0 = P[i - 1][1], x1 = P[i][0], y1 = P[i][1];
+    const seg = Math.hypot(x1 - x0, y1 - y0);
+    if (seg > 0 && acc + seg >= target) { const t = (target - acc) / seg; return [x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, (x1 - x0) / seg, (y1 - y0) / seg]; }
+    acc += seg;
+  }
+  const n = P.length;
+  if (n < 2) return [P[0][0], P[0][1], 1, 0];
+  const dx = P[n - 1][0] - P[n - 2][0], dy = P[n - 1][1] - P[n - 2][1], d = Math.hypot(dx, dy) || 1;
+  return [P[n - 1][0], P[n - 1][1], dx / d, dy / d];
+}
+function dots(ctx, P, spacing, r, color) {
+  const Q = evenPoints(P, spacing);
+  ctx.beginPath();
+  for (let i = 0; i < Q.length; i++) { ctx.moveTo(Q[i][0] + r, Q[i][1]); ctx.arc(Q[i][0], Q[i][1], r, 0, Math.PI * 2); }
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+function guideLines(ctx, x0, x1, top, h, opt) {
+  opt = opt || {};
+  const w = Math.max(0.22, h * 0.011);
+  strokePoly(ctx, [[x0, top], [x1, top]], w, C.guide);
+  if (opt.mid !== false) strokePoly(ctx, [[x0, top + h / 2], [x1, top + h / 2]], w, C.guideMid, [h * 0.05, h * 0.045]);
+  strokePoly(ctx, [[x0, top + h], [x1, top + h]], w * 1.5, C.guide);
+  if (opt.desc) strokePoly(ctx, [[x0, top + h * 1.4], [x1, top + h * 1.4]], w * 0.8, C.desc);
+}
+
+/* ---- letters and numbers ----
+   mode: model (gray letter + arrows + numbered start dots), ink (solid black),
+   solid (thick gray to trace), dots, dash, start (green start dots only), blank. */
+function drawGlyph(ctx, key, ox, oy, h, mode, opt) {
+  opt = opt || {};
+  const g = GL[key];
+  if (!g) return 0;
+  const s = h / 100;
+  const strokes = g.strokes.map(function (sk) { return { P: sk.pts.map(function (p) { return [ox + p[0] * s, oy + p[1] * s]; }), dot: sk.dot }; });
+  strokes.forEach(function (st) {
+    const P = st.P;
+    if (st.dot) {
+      const x = P[0][0], y = P[0][1];
+      if (mode === 'ink') fillCircle(ctx, x, y, Math.max(opt.inkWidth || h * 0.07, h * 0.05) * 0.75, opt.color || C.ink);
+      else if (mode === 'model' || mode === 'solid') fillCircle(ctx, x, y, h * 0.055, mode === 'model' ? C.model : C.trace);
+      else if (mode === 'dots' || mode === 'dash') strokeCircle(ctx, x, y, h * 0.035, Math.max(0.25, h * 0.016), C.dot);
+      return;
+    }
+    if (mode === 'model') strokePoly(ctx, P, h * 0.085, C.model);
+    else if (mode === 'ink') strokePoly(ctx, P, opt.inkWidth || h * 0.07, opt.color || C.ink);
+    else if (mode === 'solid') strokePoly(ctx, P, h * 0.075, C.trace);
+    else if (mode === 'dash') strokePoly(ctx, P, Math.max(0.35, h * 0.022), C.dot, [h * 0.07, h * 0.055]);
+    else if (mode === 'dots') dots(ctx, P, Math.max(1.6, h * 0.075), Math.max(0.32, h * 0.02), C.dot);
+  });
+  if (mode === 'model') {
+    strokes.forEach(function (st) {
+      if (st.dot) return;
+      const L = polyLen(st.P);
+      const fr = L > h * 0.9 ? [0.45, 0.85] : [0.6];
+      fr.forEach(function (f) { const a = pointAt(st.P, f); arrowHead(ctx, a[0], a[1], a[2], a[3], h * 0.045, C.goDark); });
+    });
+    const placed = [], rr = h * 0.06;
+    strokes.forEach(function (st, i) {
+      const a = pointAt(st.P, 0);
+      let x = a[0], y = a[1];
+      for (let q = 0; q < placed.length; q++) {
+        if (Math.hypot(placed[q][0] - x, placed[q][1] - y) < rr * 1.6) { x += a[2] * rr * 2.3; y += a[3] * rr * 2.3; }
+      }
+      placed.push([x, y]);
+      fillCircle(ctx, x, y, rr, C.go);
+      text(ctx, String(i + 1), x, y + rr * 0.08, { size: rr * 1.4, weight: 600, font: FONT_D, color: '#ffffff', align: 'center', baseline: 'middle' });
+    });
+  } else if (mode !== 'ink' && mode !== 'blank') {
+    const dr = Math.max(0.55, h * 0.035);
+    strokes.forEach(function (st) { if (st.dot && mode !== 'start') return; fillCircle(ctx, st.P[0][0], st.P[0][1], dr, C.go); });
+  }
+  return g.w * s;
+}
+function seqWidth(keys, h, inner) {
+  const s = h / 100;
+  let w = 0;
+  keys.forEach(function (k, i) { w += (GL[k] ? GL[k].w : 50) * s; if (i < keys.length - 1) w += inner; });
+  return w;
+}
+function drawSeq(ctx, keys, x, top, h, mode, inner, opt) {
+  let cx = x;
+  keys.forEach(function (k, i) { cx += drawGlyph(ctx, k, cx, top, h, mode, opt || {}); if (i < keys.length - 1) cx += inner; });
+  return cx - x;
+}
+function drawGlyphCentered(ctx, key, cx, cy, h, mode, opt) {
+  const g = GL[key];
+  if (!g) return;
+  const s = h / 100, b = g.box;
+  drawGlyph(ctx, key, cx - ((b.minX + b.maxX) / 2) * s, cy - ((b.minY + b.maxY) / 2) * s, h, mode, opt);
+}
+
+/* ---- pictures ---- */
+const P2D = new Map();
+function path2d(d) { let p = P2D.get(d); if (!p) { p = new Path2D(d); P2D.set(d, p); } return p; }
+function drawSpecs(ctx, spec, x, y, scale, style, lwMM) {
+  const sil = style === 'shadow';
+  const ink = sil ? '#39424a' : C.ink, fill = sil ? '#39424a' : '#ffffff';
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.lineWidth = lwMM ? lwMM / scale : 3.2;
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.strokeStyle = ink;
+  for (let i = 0; i < spec.length; i++) {
+    const sh = spec[i], t = sh[0];
+    if (t === 'p') { const p = path2d(sh[1]); ctx.fillStyle = fill; ctx.fill(p); ctx.stroke(p); }
+    else if (t === 'o') { ctx.stroke(path2d(sh[1])); }
+    else if (t === 'c' || t === 'e') {
+      ctx.beginPath();
+      if (t === 'c') ctx.arc(sh[1], sh[2], sh[3], 0, Math.PI * 2);
+      else ctx.ellipse(sh[1], sh[2], sh[3], sh[4], 0, 0, Math.PI * 2);
+      ctx.fillStyle = fill; ctx.fill(); ctx.stroke();
+    } else if (t === 'g' || t === 'f') {
+      ctx.beginPath();
+      ctx.moveTo(sh[1], sh[2]);
+      for (let k = 3; k + 1 < sh.length; k += 2) ctx.lineTo(sh[k], sh[k + 1]);
+      ctx.closePath();
+      ctx.fillStyle = t === 'f' ? ink : fill; ctx.fill(); ctx.stroke();
+    } else if (t === 'd') { ctx.beginPath(); ctx.arc(sh[1], sh[2], sh[3], 0, Math.PI * 2); ctx.fillStyle = ink; ctx.fill(); }
+  }
+  ctx.restore();
+}
+function drawIcon(ctx, key, cx, cy, size, style) {
+  if (style === 'color' && EMOJI[key]) {
+    ctx.save();
+    ctx.font = (size * 0.84).toFixed(2) + 'px ' + FONT_E;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000';
+    ctx.fillText(EMOJI[key], cx, cy + size * 0.04);
+    ctx.restore();
+    return;
+  }
+  const spec = ICONS[key];
+  if (!spec) return;
+  drawSpecs(ctx, spec, cx - size / 2, cy - size / 2, size / 100, style);
+}
+
+/* ================= page frame ================= */
+function starOutline(ctx, cx, cy, R) {
+  const p = starPoly(cx, cy, R, R * 0.45);
+  ctx.beginPath();
+  ctx.moveTo(p[0], p[1]);
+  for (let i = 2; i + 1 < p.length; i += 2) ctx.lineTo(p[i], p[i + 1]);
+  ctx.closePath();
+  ctx.lineWidth = 0.3; ctx.strokeStyle = C.soft; ctx.lineJoin = 'round';
+  ctx.stroke();
+}
+function drawError(ctx, A, err) {
+  ctx.save();
+  roundRect(ctx, A.x, A.y, A.w, 30, 3);
+  ctx.fillStyle = '#fff4f4'; ctx.fill();
+  ctx.lineWidth = 0.4; ctx.strokeStyle = '#d9534f'; ctx.stroke();
+  text(ctx, 'This worksheet hit a bug. Please report the message below.', A.x + 4, A.y + 10, { size: 4, weight: 700, color: '#a12c28', maxWidth: A.w - 8 });
+  text(ctx, String((err && err.message) || err), A.x + 4, A.y + 19, { size: 3.4, color: '#a12c28', maxWidth: A.w - 8 });
+  ctx.restore();
+}
+function drawPage(ctx, s, pageIdx) {
+  const paper = PAPERS[s.paper] || PAPERS.a4;
+  const W = paper.w, H = paper.h, m = 12;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+  const type = TYPES[s.type];
+  const o = merged(s);
+  const r = mulberry32(hashStr(s.type + '|' + s.seed + '|' + pageIdx + '|' + s.age));
+  let info = {}, words;
+  try {
+    info = type.prepare ? type.prepare(o, pageIdx, r) : {};
+    words = type.words(o, info);
+  } catch (err) {
+    info = { error: err };
+    words = { title: { en: type.name, fil: type.name }, instr: { en: '', fil: '' } };
+  }
+  let y = m;
+  if (s.nameLine) {
+    const lab = s.lang === 'fil' ? ['Pangalan:', 'Petsa:'] : s.lang === 'both' ? ['Name / Pangalan:', 'Date / Petsa:'] : ['Name:', 'Date:'];
+    const fs = 4, dateX = W - m - 62;
+    const w0 = measure(ctx, lab[0], fs), w1 = measure(ctx, lab[1], fs);
+    text(ctx, lab[0], m, y + 5, { size: fs, color: C.soft });
+    strokePoly(ctx, [[m + w0 + 2, y + 5.6], [dateX - 6, y + 5.6]], 0.3, C.soft);
+    text(ctx, lab[1], dateX, y + 5, { size: fs, color: C.soft });
+    strokePoly(ctx, [[dateX + w1 + 2, y + 5.6], [W - m, y + 5.6]], 0.3, C.soft);
+    y += 10;
+  }
+  const tMain = s.lang === 'fil' ? words.title.fil : words.title.en;
+  text(ctx, tMain, W / 2, y + 8, { size: 8.6, weight: 600, font: FONT_D, align: 'center', maxWidth: W - 2 * m });
+  y += 10.5;
+  if (s.lang === 'both' && words.title.fil && words.title.fil !== words.title.en) {
+    text(ctx, words.title.fil, W / 2, y + 4.4, { size: 5, italic: true, align: 'center', color: C.soft, maxWidth: W - 2 * m });
+    y += 6.4;
+  }
+  const lines = s.lang === 'en' ? [words.instr.en] : s.lang === 'fil' ? [words.instr.fil] : [words.instr.en, words.instr.fil];
+  lines.forEach(function (ln, i) {
+    if (!ln) return;
+    text(ctx, ln, W / 2, y + 5, { size: 4.4, align: 'center', italic: i === 1, color: i === 1 ? C.soft : C.ink, maxWidth: W - 2 * m });
+    y += 6;
+  });
+  y += 4;
+  const fy = H - m;
+  if (s.school) text(ctx, s.school, m, fy, { size: 3.3, color: C.soft, maxWidth: W * 0.52 });
+  const praise = s.lang === 'fil' ? 'Magaling!' : s.lang === 'both' ? 'Great job! / Magaling!' : 'Great job!';
+  for (let i = 0; i < 3; i++) starOutline(ctx, W - m - 3.4 - i * 8.2, fy - 1.4, 3.4);
+  text(ctx, praise, W - m - 3 * 8.2 - 1.5, fy, { size: 3.3, color: C.soft, align: 'right' });
+  const area = { x: m, y: y, w: W - 2 * m, h: fy - 8 - y };
+  try {
+    if (info.error) throw info.error;
+    type.draw(ctx, area, o, r, info);
+  } catch (err) {
+    if (window.console) console.error(err);
+    drawError(ctx, area, err);
+    onSheetError(err);
+  }
+}
+
+/* ================= worksheet data ================= */
+const NUM_EN = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+const NUM_FIL = ['sero', 'isa', 'dalawa', 'tatlo', 'apat', 'lima', 'anim', 'pito', 'walo', 'siyam', 'sampu', 'labing-isa', 'labindalawa', 'labintatlo', 'labing-apat', 'labinlima', 'labing-anim', 'labimpito', 'labingwalo', 'labinsiyam', 'dalawampu'];
+const ALPHA_EN = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const ALPHA_FIL = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'Ñ', 'NG', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+/* Picture cues for each letter. Borrowed letters without a common Filipino word get no Filipino cue. */
+const CUE = {
+  en: { A: ['🍎', 'apple'], B: ['⚽', 'ball'], C: ['🐱', 'cat'], D: ['🐶', 'dog'], E: ['🥚', 'egg'], F: ['🐟', 'fish'], G: ['🍇', 'grapes'], H: ['🏠', 'house'], I: ['🍦', 'ice cream'], J: ['🧃', 'juice'], K: ['🪁', 'kite'], L: ['🦁', 'lion'], M: ['🌙', 'moon'], N: ['👃', 'nose'], O: ['🐙', 'octopus'], P: ['🐷', 'pig'], Q: ['👸', 'queen'], R: ['🌈', 'rainbow'], S: ['☀️', 'sun'], T: ['🌳', 'tree'], U: ['☂️', 'umbrella'], V: ['🎻', 'violin'], W: ['🍉', 'watermelon'], X: ['📦', 'box'], Y: ['🪀', 'yo-yo'], Z: ['🦓', 'zebra'] },
+  fil: { A: ['🐶', 'aso'], B: ['⚽', 'bola'], D: ['🍃', 'dahon'], E: ['🐘', 'elepante'], G: ['🕷️', 'gagamba'], H: ['🦐', 'hipon'], I: ['🐦', 'ibon'], K: ['🐃', 'kalabaw'], L: ['🎈', 'lobo'], M: ['🥭', 'mangga'], N: ['🥥', 'niyog'], NG: ['🦷', 'ngipin'], O: ['🐻', 'oso'], P: ['🐱', 'pusa'], R: ['🎁', 'regalo'], S: ['🍌', 'saging'], T: ['🐯', 'tigre'], U: ['☁️', 'ulap'], V: ['⛵', 'vinta'], W: ['🧹', 'walis'], Y: ['🧊', 'yelo'], Z: ['🦓', 'zebra'] },
+};
+const COUNT_ICONS = Object.keys(ICONS);
+const PAIRS = [['bee', 'flower'], ['car', 'house'], ['bird', 'tree'], ['cat', 'fish'], ['butterfly', 'flower'], ['boat', 'sun'], ['balloon', 'cloud'], ['kite', 'cloud']];
+const LINE_KINDS = {
+  horizontal: { label: 'Sleeping lines ( — )', en: 'Trace the sleeping lines', fil: 'Bakatin ang pahigang linya' },
+  vertical: { label: 'Standing lines ( | )', en: 'Trace the standing lines', fil: 'Bakatin ang patayong linya' },
+  slant: { label: 'Slanting lines ( \\ )', en: 'Trace the slanting lines', fil: 'Bakatin ang pahilis na linya' },
+  zigzag: { label: 'Zigzags', en: 'Trace the zigzags', fil: 'Bakatin ang zigzag' },
+  waves: { label: 'Waves', en: 'Trace the waves', fil: 'Bakatin ang mga alon' },
+  arches: { label: 'Hills (bumps)', en: 'Trace the hills', fil: 'Bakatin ang mga burol' },
+  loops: { label: 'Loops', en: 'Trace the loops', fil: 'Bakatin ang paikot-ikot na linya' },
+  circles: { label: 'Circles', en: 'Trace the circles', fil: 'Bakatin ang mga bilog' },
+  crosses: { label: 'Crosses ( + )', en: 'Trace the crosses', fil: 'Bakatin ang mga krus' },
+};
+const LINE_MIX = {
+  nursery: ['horizontal', 'vertical', 'waves', 'arches'],
+  prek: ['horizontal', 'vertical', 'circles', 'zigzag', 'waves', 'arches'],
+  kinder: ['slant', 'zigzag', 'waves', 'arches', 'circles', 'crosses', 'loops'],
+};
+const LINE_ROWS = { nursery: 4, prek: 5, kinder: 6 };
+const SEPARATE = { vertical: 'cloud', slant: 'kite', circles: 'balloon', crosses: 'star' };
+const SHAPES = {
+  circle: { en: 'circle', fil: 'bilog', aspect: 1 },
+  square: { en: 'square', fil: 'parisukat', aspect: 1 },
+  triangle: { en: 'triangle', fil: 'tatsulok', aspect: 1.1 },
+  rectangle: { en: 'rectangle', fil: 'parihaba', aspect: 1.7 },
+  oval: { en: 'oval', fil: 'biluhaba', aspect: 0.7 },
+  star: { en: 'star', fil: 'bituin', aspect: 1.05 },
+  heart: { en: 'heart', fil: 'puso', aspect: 1.1 },
+  diamond: { en: 'diamond', fil: 'diyamante', aspect: 0.75 },
+};
+const SHAPE_MIX = {
+  nursery: ['circle', 'square', 'triangle'],
+  prek: ['circle', 'square', 'triangle', 'rectangle', 'star'],
+  kinder: ['circle', 'square', 'triangle', 'rectangle', 'oval', 'star', 'heart', 'diamond'],
+};
+const SHAPE_ROWS = { nursery: 3, prek: 4, kinder: 5 };
+const PATTERNS = { AB: [0, 1], AAB: [0, 0, 1], ABB: [0, 1, 1], ABC: [0, 1, 2], AABB: [0, 0, 1, 1] };
+const PATTERN_BY_AGE = { nursery: ['AB'], prek: ['AB', 'AAB', 'ABB'], kinder: ['AB', 'AAB', 'ABB', 'ABC', 'AABB'] };
+/* Look-alike letters, mixed into Kinder letter hunts on purpose. */
+const CONFUSE = {
+  B: 'DPRE', C: 'GOQ', D: 'BOP', E: 'FB', F: 'EP', G: 'CQ', H: 'NM', I: 'LT', K: 'XR', L: 'IT', M: 'NW', N: 'MH', 'Ñ': 'N',
+  O: 'QCD', P: 'BRF', Q: 'OG', R: 'PB', U: 'VY', V: 'UY', W: 'MV', X: 'KY', Y: 'VX', Z: 'N',
+  b: 'dpqh', c: 'oe', d: 'bpq', e: 'ca', f: 't', g: 'qy', h: 'nb', i: 'lj', j: 'i', l: 'it', m: 'nw', n: 'mhu', 'ñ': 'n',
+  o: 'ca', p: 'qbd', q: 'pdg', r: 'n', t: 'fl', u: 'nv', v: 'uy', w: 'mv', y: 'gv',
+};
+const DOT_SHAPES = {
+  house: { label: 'House', pts: [[50, 8], [88, 42], [88, 92], [12, 92], [12, 42]], extras: [['g', 42, 92, 42, 68, 58, 68, 58, 92]] },
+  kite: { label: 'Kite', pts: [[50, 4], [80, 40], [50, 86], [20, 40]], extras: [['o', 'M50 86 C42 90 58 94 50 99']] },
+  heart: { label: 'Heart', curve: true },
+  star: { label: 'Star', star: true, extras: [['d', 43, 52, 2.4], ['d', 57, 52, 2.4], ['o', 'M43 61 C47 66 53 66 57 61']] },
+  fish: { label: 'Fish', pts: [[6, 50], [16, 37], [32, 28], [50, 27], [64, 33], [76, 46], [95, 29], [88, 50], [95, 71], [76, 54], [64, 67], [50, 73], [32, 72], [16, 63]], extras: [['d', 22, 46, 2.4]] },
+  tree: { label: 'Tree', pts: [[50, 4], [68, 28], [60, 28], [78, 52], [68, 52], [88, 76], [12, 76], [32, 52], [22, 52], [40, 28], [32, 28]], extras: [['g', 44, 76, 56, 76, 56, 94, 44, 94]] },
+};
+const DOT_BY_AGE = { nursery: ['house', 'kite', 'heart'], prek: ['house', 'kite', 'heart', 'star'], kinder: ['star', 'fish', 'tree', 'heart', 'house'] };
+const DOT_N = { nursery: 6, prek: 10, kinder: 16 };
+const CASES = [['both', 'Big and small letters'], ['upper', 'Big letters only'], ['lower', 'Small letters only']];
+
+/* ================= worksheet helpers ================= */
+/* Scaffolding: rows go from solid gray, to dots, to every-other, to start dots only. Nursery never drops to start dots. */
+function rowModes(support, rows, age) {
+  if (support === 'solid' || support === 'dots' || support === 'dash') return Array(rows).fill(support);
+  const out = [];
+  for (let i = 0; i < rows; i++) {
+    if (i === 0) out.push('solid');
+    else if (age === 'nursery') out.push(i === 1 && rows > 3 ? 'solid' : 'dots');
+    else if (age === 'kinder' && rows >= 4 && i === rows - 1) out.push('start');
+    else if (rows >= 3 && i === rows - 1) out.push('mixed');
+    else if (age === 'kinder' && rows >= 4 && i === rows - 2) out.push('mixed');
+    else out.push('dots');
+  }
+  return out;
+}
+function unitMode(rowMode, k) {
+  if (rowMode === 'mixed') return k % 2 === 0 ? 'dots' : 'start';
+  if (rowMode === 'start') return k === 0 ? 'dots' : 'start';
+  return rowMode;
+}
+function traceStroke(ctx, P, mode, ref) {
+  if (mode === 'solid') strokePoly(ctx, P, Math.max(1.2, ref * 0.075), C.trace);
+  else if (mode === 'dash') strokePoly(ctx, P, Math.max(0.4, ref * 0.024), C.dot, [ref * 0.07, ref * 0.055]);
+  else if (mode === 'dots') dots(ctx, P, Math.max(1.8, ref * 0.075), Math.max(0.36, ref * 0.02), C.dot);
+}
+function startMark(ctx, P, ref) {
+  const s0 = pointAt(P, 0), L = polyLen(P);
+  if (L > ref * 0.35) {
+    const a = pointAt(P, Math.min(0.5, (ref * 0.17) / L));
+    arrowHead(ctx, a[0], a[1], a[2], a[3], Math.max(0.9, ref * 0.036), C.go);
+  }
+  fillCircle(ctx, s0[0], s0[1], Math.max(0.85, ref * 0.04), C.go);
+}
+function letterKeys(L, kase) {
+  if (L === 'NG') return kase === 'upper' ? ['N', 'G'] : ['n', 'g'];
+  return [kase === 'upper' ? L : L.toLowerCase()];
+}
+function cueList(L, lang) {
+  const out = [], en = CUE.en[L], fil = CUE.fil[L];
+  if (lang !== 'fil' && en) out.push(en);
+  if (lang !== 'en' && fil && !(en && lang === 'both' && fil[1] === en[1])) out.push(fil);
+  return out;
+}
+function drawWord(ctx, word, L, cx, y, size, maxW) {
+  const lw = L.toLowerCase(), parts = [];
+  let i = 0;
+  while (i < word.length) {
+    if (word.substr(i, lw.length).toLowerCase() === lw) { parts.push([word.substr(i, lw.length), true]); i += lw.length; }
+    else { parts.push([word.charAt(i), false]); i++; }
+  }
+  ctx.save();
+  let fs = size;
+  const widthOf = function () {
+    let w = 0;
+    parts.forEach(function (p) { ctx.font = (p[1] ? 700 : 400) + ' ' + fs + 'px ' + FONT_B; w += ctx.measureText(p[0]).width; });
+    return w;
+  };
+  let tw = widthOf(), guard = 0;
+  while (tw > maxW && fs > 2 && guard++ < 30) { fs *= 0.92; tw = widthOf(); }
+  let x = cx - tw / 2;
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
+  parts.forEach(function (p) {
+    ctx.font = (p[1] ? 700 : 400) + ' ' + fs + 'px ' + FONT_B;
+    ctx.fillStyle = p[1] ? C.goDark : C.ink;
+    ctx.fillText(p[0], x, y);
+    x += ctx.measureText(p[0]).width;
+  });
+  ctx.restore();
+}
+function numberChoices(r, n, maxN) {
+  const set = [n];
+  let guard = 0;
+  while (set.length < 3 && guard++ < 60) { const v = n + rInt(r, -3, 3); if (v >= 1 && v <= Math.max(maxN, 5) && set.indexOf(v) < 0) set.push(v); }
+  let v = 1;
+  while (set.length < 3) { if (set.indexOf(v) < 0) set.push(v); v++; }
+  return set;
+}
+function distractors(L, kase, age) {
+  const lo = L.toLowerCase();
+  const base = ALPHA_EN.concat(ALPHA_EN.map(function (x) { return x.toLowerCase(); })).filter(function (k) {
+    return kase === 'upper' ? k !== k.toLowerCase() : kase === 'lower' ? k === k.toLowerCase() : true;
+  });
+  let pool = base.filter(function (k) { return k !== L && k !== lo; });
+  if (age === 'kinder') {
+    const conf = ((CONFUSE[L] || '') + (CONFUSE[lo] || '')).split('').filter(function (k) { return pool.indexOf(k) >= 0; });
+    pool = pool.concat(conf, conf, conf, conf);
+  }
+  return pool;
+}
+function densify(corners, N) {
+  const nc = corners.length;
+  if (N <= nc) return corners.slice();
+  const lens = corners.map(function (p, i) { const q = corners[(i + 1) % nc]; return Math.hypot(q[0] - p[0], q[1] - p[1]); });
+  const perim = lens.reduce(function (a, b) { return a + b; }, 0), extra = N - nc;
+  const raw = lens.map(function (l) { return extra * l / perim; });
+  const alloc = raw.map(function (v) { return Math.floor(v); });
+  const left = extra - alloc.reduce(function (a, b) { return a + b; }, 0);
+  const order = raw.map(function (v, i) { return [v - Math.floor(v), i]; }).sort(function (a, b) { return b[0] - a[0]; });
+  for (let j = 0; j < left && j < order.length; j++) alloc[order[j][1]]++;
+  const out = [];
+  corners.forEach(function (p, i) {
+    const q = corners[(i + 1) % nc];
+    out.push(p);
+    for (let k = 1; k <= alloc[i]; k++) { const t = k / (alloc[i] + 1); out.push([p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t]); }
+  });
+  return out;
+}
+function heartPoints(N) {
+  const dense = [];
+  for (let i = 0; i < 360; i++) {
+    const t = (2 * Math.PI * i) / 360;
+    dense.push([50 + 2.85 * 16 * Math.pow(Math.sin(t), 3), 50 - 2.85 * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t) + 2.7)]);
+  }
+  dense.push(dense[0].slice());
+  return evenPoints(dense, polyLen(dense) / N).slice(0, N);
+}
+function makeMaze(cols, rows, r) {
+  const N = cols * rows, walls = new Array(N).fill(15), seen = new Array(N).fill(false), stack = [0];
+  seen[0] = true;
+  while (stack.length) {
+    const cur = stack[stack.length - 1], cx = cur % cols, cy = Math.floor(cur / cols), nb = [];
+    if (cy > 0 && !seen[cur - cols]) nb.push([cur - cols, 1, 4]);
+    if (cx < cols - 1 && !seen[cur + 1]) nb.push([cur + 1, 2, 8]);
+    if (cy < rows - 1 && !seen[cur + cols]) nb.push([cur + cols, 4, 1]);
+    if (cx > 0 && !seen[cur - 1]) nb.push([cur - 1, 8, 2]);
+    if (!nb.length) { stack.pop(); continue; }
+    const nx = nb[Math.floor(r() * nb.length)];
+    walls[cur] &= ~nx[1];
+    walls[nx[0]] &= ~nx[2];
+    seen[nx[0]] = true;
+    stack.push(nx[0]);
+  }
+  return walls;
+}
+function lineStrokes(kind, x0, x1, cy, H) {
+  const W = x1 - x0, out = [];
+  if (kind === 'horizontal') out.push([[x0, cy], [x1, cy]]);
+  else if (kind === 'vertical' || kind === 'slant') {
+    const n = Math.max(3, Math.floor(W / (H * 0.42))), step = W / n, a = H * 0.36, sk = kind === 'slant' ? H * 0.2 : 0;
+    for (let i = 0; i < n; i++) { const x = x0 + (i + 0.5) * step; out.push([[x - sk, cy - a], [x + sk, cy + a]]); }
+  } else if (kind === 'zigzag') {
+    const a = H * 0.32, n = Math.max(2, Math.round(W / (H * 0.8))), p = W / n, P = [];
+    for (let k = 0; k <= 2 * n; k++) P.push([x0 + k * p / 2, k % 2 === 0 ? cy + a : cy - a]);
+    out.push(P);
+  } else if (kind === 'waves') {
+    const a = H * 0.3, n = Math.max(1, Math.round(W / (H * 1.25))), steps = n * 32, P = [];
+    for (let k = 0; k <= steps; k++) { const t = k / steps; P.push([x0 + W * t, cy - a * Math.sin(t * n * 2 * Math.PI)]); }
+    out.push(P);
+  } else if (kind === 'arches') {
+    const a = H * 0.3, n = Math.max(2, Math.round(W / (H * 0.85))), w = W / n, base = cy + a * 0.9, P = [];
+    for (let k = 0; k < n; k++) {
+      const cx = x0 + (k + 0.5) * w;
+      for (let j = 0; j <= 16; j++) {
+        if (k > 0 && j === 0) continue;
+        const th = Math.PI + Math.PI * j / 16;
+        P.push([cx + (w / 2) * Math.cos(th), base + a * 1.9 * Math.sin(th)]);
+      }
+    }
+    out.push(P);
+  } else if (kind === 'loops') {
+    const d = H * 0.3, n = Math.max(2, Math.floor(W / (d * 3.3))), rr = W / (2 * Math.PI * n), steps = n * 36, P = [];
+    for (let k = 0; k <= steps; k++) { const t = 2 * Math.PI * n * k / steps; P.push([x0 + rr * t + d * Math.sin(t), cy + d * Math.cos(t)]); }
+    out.push(P);
+  } else if (kind === 'circles') {
+    const n = Math.max(2, Math.floor(W / (H * 0.85))), step = W / n, R = Math.min(H * 0.34, step * 0.4);
+    for (let i = 0; i < n; i++) {
+      const cx = x0 + (i + 0.5) * step, P = [];
+      for (let j = 0; j <= 48; j++) { const th = (-90 - 360 * j / 48) * Math.PI / 180; P.push([cx + R * Math.cos(th), cy + R * Math.sin(th)]); }
+      out.push(P);
+    }
+  } else if (kind === 'crosses') {
+    const n = Math.max(2, Math.floor(W / (H * 0.85))), step = W / n, a = Math.min(H * 0.34, step * 0.4);
+    for (let i = 0; i < n; i++) { const cx = x0 + (i + 0.5) * step; out.push([[cx, cy - a], [cx, cy + a]]); out.push([[cx - a, cy], [cx + a, cy]]); }
+  }
+  return out;
+}
+function shapeStrokes(kind, cx, cy, S) {
+  const a = S / 2, out = [];
+  const ell = function (rx, ry) {
+    const P = [];
+    for (let j = 0; j <= 64; j++) { const th = (-90 - 360 * j / 64) * Math.PI / 180; P.push([cx + rx * Math.cos(th), cy + ry * Math.sin(th)]); }
+    return P;
+  };
+  if (kind === 'circle') out.push(ell(a, a));
+  else if (kind === 'oval') out.push(ell(a * 0.68, a));
+  else if (kind === 'square') out.push([[cx - a, cy - a], [cx - a, cy + a], [cx + a, cy + a], [cx + a, cy - a], [cx - a, cy - a]]);
+  else if (kind === 'rectangle') { const w = a * 1.7, h = a * 0.85; out.push([[cx - w, cy - h], [cx - w, cy + h], [cx + w, cy + h], [cx + w, cy - h], [cx - w, cy - h]]); }
+  else if (kind === 'triangle') { const w = a * 1.1; out.push([[cx, cy - a], [cx - w, cy + a * 0.9], [cx + w, cy + a * 0.9], [cx, cy - a]]); }
+  else if (kind === 'diamond') { const w = a * 0.72; out.push([[cx, cy - a], [cx - w, cy], [cx, cy + a], [cx + w, cy], [cx, cy - a]]); }
+  else if (kind === 'star') { const P = pairs(starPoly(cx, cy + a * 0.08, a * 1.02, a * 0.42)); P.push(P[0].slice()); out.push(P); }
+  else if (kind === 'heart') {
+    const k = S / 29.2;
+    const hp = function (t) { return [cx + k * 16 * Math.pow(Math.sin(t), 3), cy - k * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t) + 2.7)]; };
+    const left = [], right = [];
+    for (let j = 0; j <= 40; j++) { const t = Math.PI * j / 40; right.push(hp(t)); left.push(hp(-t)); }
+    out.push(left, right);
+  }
+  return out;
+}
+function rowSep(ctx, A, y) { strokePoly(ctx, [[A.x, y], [A.x + A.w, y]], 0.2, C.sep, [1.2, 1.2]); }
+
+/* ================= worksheet types =================
+   Each type: name, sub, hash, options, tip, optional prepare/multipage, words (title + instructions), draw. */
+const TYPES = {
+  lines: {
+    name: 'Lines', sub: 'Pre-writing strokes', hash: 'lines', tracing: true,
+    options: [{ key: 'stroke', label: 'Strokes', def: 'mixed', choices: [['mixed', 'Mixed set, easy to hard']].concat(Object.keys(LINE_KINDS).map(function (k) { return [k, LINE_KINDS[k].label]; })) }],
+    tip: 'Strokes come before letters, roughly in this order: standing line, sleeping line, circle, cross, slanting lines, then zigzags, waves and loops. Let children trace with a fat crayon first. Big arm movements come before small finger control.',
+    words(o) {
+      const k = LINE_KINDS[o.stroke];
+      return {
+        title: { en: k ? k.en : 'Trace the lines', fil: k ? k.fil : 'Bakatin ang mga linya' },
+        instr: { en: 'Start at the green dot and follow the arrow.', fil: 'Magsimula sa berdeng tuldok at sundan ang palaso.' },
+      };
+    },
+    draw(ctx, A, o, r) {
+      const kinds = o.stroke === 'mixed' ? LINE_MIX[o.age] : Array(LINE_ROWS[o.age]).fill(o.stroke);
+      const rows = kinds.length, rowH = A.h / rows, pairList = shuffle(r, PAIRS);
+      const modes = o.support === 'fade' ? kinds.map(function (_, i) { return i === 0 ? 'solid' : 'dots'; }) : rowModes(o.support, rows, o.age);
+      kinds.forEach(function (kind, i) {
+        const cy = A.y + rowH * (i + 0.5), H = rowH * 0.86, isz = Math.min(H * 0.62, 22), ref = Math.min(H, 34);
+        const sep = SEPARATE[kind], pr = pairList[i % pairList.length];
+        drawIcon(ctx, sep || pr[0], A.x + isz / 2, cy, isz, o.pic);
+        if (!sep) drawIcon(ctx, pr[1], A.x + A.w - isz / 2, cy, isz, o.pic);
+        const x0 = A.x + isz + 5, x1 = sep ? A.x + A.w - 3 : A.x + A.w - isz - 5;
+        const strokes = lineStrokes(kind, x0, x1, cy, H);
+        strokes.forEach(function (P) { traceStroke(ctx, P, modes[i], ref); });
+        strokes.forEach(function (P) { startMark(ctx, P, ref); });
+        if (i < rows - 1) rowSep(ctx, A, A.y + rowH * (i + 1));
+      });
+    },
+  },
+
+  letters: {
+    name: 'Letters', sub: 'Trace A to Z', hash: 'letters', tracing: true,
+    options: [
+      { key: 'letter', label: 'Letter', def: 'A', choices: [['all-en', 'Whole alphabet A to Z (26 pages)'], ['all-fil', 'Filipino alphabet with Ñ and NG (28 pages)']].concat(ALPHA_FIL.map(function (L) { return [L, L === 'NG' ? 'NG ng' : L + ' ' + L.toLowerCase()]; })) },
+      { key: 'kase', label: 'Case', def: 'both', choices: CASES },
+    ],
+    multipage(o) { return o.letter === 'all-en' ? 26 : o.letter === 'all-fil' ? 28 : 0; },
+    tip: 'Start every letter at the top, at the green dot, and follow the numbers. The rows fade from heavy support to writing alone. Children trace the gray letters first and finish with only the starting dots. Many teachers start 3 and 4 year olds on big letters, since those are mostly straight lines and big curves.',
+    prepare(o, pageIdx) {
+      return { L: o.letter === 'all-en' ? ALPHA_EN[pageIdx % 26] : o.letter === 'all-fil' ? ALPHA_FIL[pageIdx % 28] : o.letter };
+    },
+    words(o, info) {
+      const L = info.L, lo = L === 'NG' ? 'ng' : L.toLowerCase();
+      const disp = o.kase === 'upper' ? L : o.kase === 'lower' ? lo : L + ' ' + lo;
+      return {
+        title: { en: 'Letter ' + disp, fil: 'Titik ' + disp },
+        instr: { en: 'Trace the letters. Start at the green dot and follow the numbers.', fil: 'Bakatin ang mga titik. Magsimula sa berdeng tuldok at sundan ang mga bilang.' },
+      };
+    },
+    draw(ctx, A, o, r, info) {
+      const L = info.L, ag = AGES[o.age];
+      const showU = o.kase !== 'lower', showL = o.kase !== 'upper';
+      const U = letterKeys(L, 'upper'), lo = letterKeys(L, 'lower');
+      const boxH = Math.min(56, A.h * 0.27);
+      panelBox(ctx, A.x, A.y, A.w, boxH);
+      const cues = cueList(L, o.lang);
+      const cueW = cues.length ? Math.min(A.w * 0.4, 36 * cues.length + 6) : 0;
+      const mx0 = A.x + 7, mx1 = A.x + A.w - cueW - 5;
+      const seqs = [];
+      if (showU) seqs.push(U);
+      if (showL) seqs.push(lo);
+      const totalAt = function (hh) { return seqs.reduce(function (sum, q) { return sum + seqWidth(q, hh, hh * 0.1); }, 0) + hh * 0.35 * (seqs.length - 1); };
+      let mh = boxH * 0.6;
+      const fitW = mx1 - mx0 - 6, tw = totalAt(mh);
+      if (tw > fitW) mh = mh * fitW / tw;
+      const mTop = A.y + (boxH - mh * 1.2) / 2;
+      guideLines(ctx, mx0 - 3, mx1, mTop, mh, { desc: showL });
+      let x = mx0 + Math.max(0, (mx1 - mx0 - totalAt(mh)) / 2);
+      seqs.forEach(function (q) { x += drawSeq(ctx, q, x, mTop, mh, 'model', mh * 0.1) + mh * 0.35; });
+      if (cueW) strokePoly(ctx, [[A.x + A.w - cueW, A.y + 6], [A.x + A.w - cueW, A.y + boxH - 6]], 0.25, C.box, [1, 1]);
+      cues.forEach(function (c, i) {
+        const slot = (cueW - 6) / cues.length, cx = A.x + A.w - cueW + 3 + slot * (i + 0.5);
+        ctx.save();
+        ctx.font = (boxH * 0.36).toFixed(2) + 'px ' + FONT_E;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000';
+        ctx.fillText(c[0], cx, A.y + boxH * 0.4);
+        ctx.restore();
+        drawWord(ctx, c[1], L, cx, A.y + boxH * 0.86, Math.min(6, boxH * 0.11), slot - 3);
+      });
+      const h = showU && showL ? ag.letterH2 : ag.letterH, pitch = h * 1.62;
+      let y = A.y + boxH + h * 0.45;
+      const avail = A.y + A.h - y;
+      const rows = Math.max(1, Math.floor((avail - h * 1.4) / pitch) + 1);
+      const half = Math.ceil(rows / 2);
+      const groups = showU && showL ? [[U, half, false], [lo, rows - half, true]] : [[showU ? U : lo, rows, !showU]];
+      const inner = h * 0.12, gap = h * 0.42;
+      groups.forEach(function (gp) {
+        const seq = gp[0], n = gp[1], isLower = gp[2];
+        if (n <= 0) return;
+        const modes = rowModes(o.support, n, o.age), uw = seqWidth(seq, h, inner);
+        const count = Math.max(1, Math.floor((A.w - 4 + gap) / (uw + gap)));
+        for (let i = 0; i < n; i++) {
+          guideLines(ctx, A.x, A.x + A.w, y, h, { desc: isLower });
+          let x2 = A.x + 3;
+          for (let k = 0; k < count; k++) { drawSeq(ctx, seq, x2, y, h, unitMode(modes[i], k), inner); x2 += uw + gap; }
+          y += pitch;
+        }
+      });
+    },
+  },
+
+  numbers: {
+    name: 'Numbers', sub: 'Trace 0 to 20', hash: 'numbers', tracing: true,
+    options: [{ key: 'num', label: 'Number', def: '1', choices: [['all-1-10', '1 to 10 (10 pages)'], ['all-0-10', '0 to 10 (11 pages)'], ['all-11-20', '11 to 20 (10 pages)']].concat(NUM_EN.map(function (w, i) { return [String(i), i + ' ' + w]; })) }],
+    multipage(o) { return ({ 'all-1-10': 10, 'all-0-10': 11, 'all-11-20': 10 })[o.num] || 0; },
+    tip: 'Pair each numeral with a real amount. The ten-frame lets children see five and ten at a glance without counting one by one. Count the dots together first, then trace.',
+    prepare(o, pageIdx) {
+      const lists = { 'all-1-10': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 'all-0-10': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 'all-11-20': [11, 12, 13, 14, 15, 16, 17, 18, 19, 20] };
+      const l = lists[o.num];
+      return { N: l ? l[pageIdx % l.length] : (parseInt(o.num, 10) || 0) };
+    },
+    words(o, info) {
+      const N = info.N, circle = o.pic === 'color';
+      if (N === 0) return { title: { en: 'Number 0', fil: 'Bilang 0' }, instr: { en: 'Trace the number 0. Zero means none!', fil: 'Bakatin ang bilang 0. Ang sero ay wala!' } };
+      return {
+        title: { en: 'Number ' + N, fil: 'Bilang ' + N },
+        instr: {
+          en: 'Trace the number ' + N + '. Then ' + (circle ? 'circle ' : 'color ') + N + (N === 1 ? ' picture.' : ' pictures.'),
+          fil: 'Bakatin ang bilang ' + N + '. Pagkatapos, ' + (circle ? 'bilugan' : 'kulayan') + ' ang ' + N + ' larawan.',
+        },
+      };
+    },
+    draw(ctx, A, o, r, info) {
+      const N = info.N, digits = String(N).split(''), ag = AGES[o.age];
+      const boxH = Math.min(56, A.h * 0.27);
+      panelBox(ctx, A.x, A.y, A.w, boxH);
+      const frames = N > 10 ? 2 : 1, cell = frames === 2 ? 6.2 : 7.4, fw = cell * 5, fgap = 4;
+      const fx0 = A.x + A.w - 6 - frames * fw - (frames - 1) * fgap, fy = A.y + (boxH - cell * 2) / 2;
+      for (let f = 0; f < frames; f++) {
+        const fx = fx0 + f * (fw + fgap);
+        for (let rr = 0; rr < 2; rr++) {
+          for (let cc = 0; cc < 5; cc++) {
+            ctx.lineWidth = 0.35; ctx.strokeStyle = C.soft;
+            ctx.strokeRect(fx + cc * cell, fy + rr * cell, cell, cell);
+            if (f * 10 + rr * 5 + cc < N) fillCircle(ctx, fx + (cc + 0.5) * cell, fy + (rr + 0.5) * cell, cell * 0.32, C.ink);
+          }
+        }
+      }
+      let mh = boxH * 0.62;
+      const mx = A.x + 9;
+      let sw = seqWidth(digits, mh, mh * 0.12);
+      const maxSW = (fx0 - mx) * 0.45;
+      if (sw > maxSW) { mh = mh * maxSW / sw; sw = seqWidth(digits, mh, mh * 0.12); }
+      const mTop = A.y + (boxH - mh) / 2;
+      guideLines(ctx, mx - 4, mx + sw + 4, mTop, mh, { mid: false });
+      drawSeq(ctx, digits, mx, mTop, mh, 'model', mh * 0.12);
+      const wx = mx + sw + 12, wmax = Math.max(10, fx0 - 6 - wx), wl = [];
+      if (o.lang !== 'fil') wl.push(NUM_EN[N]);
+      if (o.lang !== 'en') wl.push(NUM_FIL[N]);
+      wl.forEach(function (w, i) {
+        text(ctx, w, wx, A.y + boxH * (wl.length === 1 ? 0.58 : 0.45 + i * 0.25), { size: i === 0 ? 7.4 : 5.6, weight: i === 0 ? 600 : 400, italic: i === 1, font: i === 0 ? FONT_D : FONT_B, color: i === 0 ? C.ink : C.soft, maxWidth: wmax });
+      });
+      const h = ag.numH, pitch = h * 1.5, colorH = N > 0 ? (N > 10 ? 44 : 30) : 0;
+      let y = A.y + boxH + h * 0.35;
+      const avail = A.y + A.h - colorH - y;
+      const rows = Math.max(1, Math.floor((avail - h) / pitch) + 1);
+      const modes = rowModes(o.support, rows, o.age), rin = h * 0.12, gap = h * 0.5, uw = seqWidth(digits, h, rin);
+      const count = Math.max(1, Math.floor((A.w - 4 + gap) / (uw + gap)));
+      for (let i = 0; i < rows; i++) {
+        guideLines(ctx, A.x, A.x + A.w, y, h, { mid: false });
+        let x = A.x + 3;
+        for (let k = 0; k < count; k++) { drawSeq(ctx, digits, x, y, h, unitMode(modes[i], k), rin); x += uw + gap; }
+        y += pitch;
+      }
+      if (N > 0) {
+        const top = A.y + A.h - colorH, verb = o.pic === 'color' ? ['Circle', 'Bilugan ang'] : ['Color', 'Kulayan ang'];
+        const lab = o.lang === 'fil' ? verb[1] + ' ' + N + '.' : o.lang === 'both' ? verb[0] + ' ' + N + '. / ' + verb[1] + ' ' + N + '.' : verb[0] + ' ' + N + '.';
+        text(ctx, lab, A.x, top + 4.5, { size: 4.4, weight: 700 });
+        const total = N > 10 ? 20 : 10, per = 10, slot = (A.w - 4) / per, isz = Math.min(slot * 0.86, 14), icon = pick(r, COUNT_ICONS);
+        for (let k = 0; k < total; k++) {
+          const rr = Math.floor(k / per), cc = k % per;
+          drawIcon(ctx, icon, A.x + 2 + (cc + 0.5) * slot, top + 8.5 + isz / 2 + rr * (isz + 3), isz, o.pic);
+        }
+      }
+    },
+  },
+
+  counting: {
+    name: 'Counting', sub: 'Count and circle', hash: 'counting',
+    options: [
+      { key: 'max', label: 'Count up to', def: 'auto', choices: [['auto', 'Match the age group'], ['5', '5'], ['10', '10'], ['20', '20']] },
+      { key: 'answer', label: 'Children answer by', def: 'circle', choices: [['circle', 'Circling the number'], ['write', 'Writing the number']] },
+    ],
+    tip: 'Teach touch-counting: one finger on each picture and one number word each time. The last number said tells how many. Pictures sit in rows of five so children can start to see groups.',
+    words(o) {
+      const w = o.answer === 'write';
+      return {
+        title: { en: w ? 'Count and write' : 'Count and circle', fil: w ? 'Bilangin at isulat' : 'Bilangin at bilugan' },
+        instr: {
+          en: w ? 'Count the pictures. Write the number in the box.' : 'Count the pictures. Circle the correct number.',
+          fil: w ? 'Bilangin ang mga larawan. Isulat ang bilang sa kahon.' : 'Bilangin ang mga larawan. Bilugan ang tamang bilang.',
+        },
+      };
+    },
+    draw(ctx, A, o, r) {
+      const maxN = o.max === 'auto' ? { nursery: 5, prek: 10, kinder: 10 }[o.age] : parseInt(o.max, 10);
+      const grid = { nursery: [2, 2], prek: [2, 3], kinder: [2, 4] }[o.age], cols = grid[0], rows = grid[1];
+      const gap = 5, bw = (A.w - gap * (cols - 1)) / cols, bh = (A.h - gap * (rows - 1)) / rows;
+      const icons = shuffle(r, COUNT_ICONS), used = [];
+      for (let i = 0; i < cols * rows; i++) {
+        const bx = A.x + (i % cols) * (bw + gap), by = A.y + Math.floor(i / cols) * (bh + gap);
+        roundRect(ctx, bx, by, bw, bh, 3.5);
+        ctx.lineWidth = 0.4; ctx.strokeStyle = C.box; ctx.stroke();
+        let n = rInt(r, 1, maxN), tries = 0;
+        while (used.indexOf(n) >= 0 && tries++ < 12) n = rInt(r, 1, maxN);
+        used.push(n);
+        const ansH = Math.min(bh * 0.3, 24), areaH = bh - ansH - 6, per = 5, nRows = Math.ceil(n / per);
+        const cell = Math.min((bw - 8) / per, (areaH - 2) / nRows), isz = cell * 0.88;
+        for (let k = 0; k < n; k++) {
+          const kr = Math.floor(k / per), kc = k % per, inRow = Math.min(per, n - kr * per);
+          drawIcon(ctx, icons[i % icons.length], bx + bw / 2 + (kc - (inRow - 1) / 2) * cell, by + 4 + areaH / 2 + (kr - (nRows - 1) / 2) * cell, isz, o.pic);
+        }
+        const ay = by + bh - ansH / 2 - 2;
+        if (o.answer === 'write') {
+          const wh = Math.min(ansH * 0.8, 18), ww = wh * 1.5;
+          roundRect(ctx, bx + bw / 2 - ww / 2, ay - wh / 2, ww, wh, 2);
+          ctx.save(); ctx.setLineDash([1.2, 1]); ctx.lineWidth = 0.4; ctx.strokeStyle = C.soft; ctx.stroke(); ctx.restore();
+        } else {
+          const ch = Math.min(ansH * 0.62, 12), slot = Math.min(bw / 3.3, ch * 2.4);
+          shuffle(r, numberChoices(r, n, maxN)).forEach(function (v, j) {
+            const ds = String(v).split(''), sw = seqWidth(ds, ch, ch * 0.1);
+            drawSeq(ctx, ds, bx + bw / 2 + (j - 1) * slot - sw / 2, ay - ch / 2, ch, 'ink', ch * 0.1, { inkWidth: ch * 0.085 });
+          });
+        }
+      }
+    },
+  },
+
+  shapes: {
+    name: 'Shapes', sub: 'Trace shapes', hash: 'shapes', tracing: true,
+    options: [{ key: 'shape', label: 'Shape', def: 'mixed', choices: [['mixed', 'Mixed set, by age']].concat(Object.keys(SHAPES).map(function (k) { return [k, cap(SHAPES[k].en) + ' / ' + SHAPES[k].fil]; })) }],
+    tip: 'Name the shape, trace it, then go on a shape hunt around the classroom. Say the moves aloud while tracing a square: down, across, up, back.',
+    words(o) {
+      const k = o.shape === 'mixed' ? null : SHAPES[o.shape];
+      return {
+        title: { en: k ? 'Trace the ' + k.en : 'Trace the shapes', fil: k ? 'Bakatin ang ' + k.fil : 'Bakatin ang mga hugis' },
+        instr: { en: 'Trace each shape. Start at the green dot and follow the arrow.', fil: 'Bakatin ang bawat hugis. Magsimula sa berdeng tuldok at sundan ang palaso.' },
+      };
+    },
+    draw(ctx, A, o, r) {
+      const list = o.shape === 'mixed' ? SHAPE_MIX[o.age] : Array(SHAPE_ROWS[o.age]).fill(o.shape);
+      const rows = list.length, rowH = A.h / rows, labelW = o.lang === 'both' ? 36 : 30;
+      const modes = rowModes(o.support, rows, o.age);
+      list.forEach(function (kind, i) {
+        const sh = SHAPES[kind], cy = A.y + rowH * (i + 0.5), S = Math.min(rowH * 0.64, 46);
+        const names = o.lang === 'en' ? [sh.en] : o.lang === 'fil' ? [sh.fil] : [sh.en, sh.fil];
+        names.forEach(function (nm, j) {
+          text(ctx, cap(nm), A.x, cy + (names.length === 1 ? 1.6 : -1 + j * 5.6), { size: j ? 3.8 : 4.6, weight: j ? 400 : 700, italic: j === 1, color: j ? C.soft : C.ink, maxWidth: labelW - 3 });
+        });
+        const cellW = S * sh.aspect + Math.max(6, S * 0.32);
+        const n = Math.max(2, Math.floor((A.w - labelW) / cellW)), step = (A.w - labelW) / n;
+        for (let k = 0; k < n; k++) {
+          const cx = A.x + labelW + (k + 0.5) * step, strokes = shapeStrokes(kind, cx, cy, S);
+          const mode = k === 0 ? 'model' : unitMode(modes[i], k - 1);
+          if (mode === 'model') {
+            strokes.forEach(function (P) { strokePoly(ctx, P, Math.max(1.1, S * 0.055), C.model); });
+            strokes.forEach(function (P) { const a = pointAt(P, 0.32); arrowHead(ctx, a[0], a[1], a[2], a[3], Math.max(1, S * 0.05), C.goDark); });
+          } else {
+            strokes.forEach(function (P) { traceStroke(ctx, P, mode, S); });
+          }
+          strokes.forEach(function (P) { fillCircle(ctx, P[0][0], P[0][1], Math.max(0.8, S * 0.035), C.go); });
+        }
+        if (i < rows - 1) rowSep(ctx, A, A.y + rowH * (i + 1));
+      });
+    },
+  },
+
+  matching: {
+    name: 'Matching', sub: 'Draw a line', hash: 'matching',
+    options: [{ key: 'kind', label: 'Match', def: 'pictures', choices: [['pictures', 'Same pictures'], ['shadows', 'Picture to shadow'], ['letters', 'Big letter to small letter'], ['numbers', 'Number to group']] }],
+    tip: 'Matching builds visual discrimination, the habit of noticing small differences that children need before reading. Ask children to say why two things go together.',
+    words(o) {
+      const m = {
+        pictures: ['Draw a line to match the same pictures.', 'Gumuhit ng linya sa magkaparehong larawan.'],
+        shadows: ['Draw a line from each picture to its shadow.', 'Gumuhit ng linya mula sa larawan papunta sa anino nito.'],
+        letters: ['Draw a line from each big letter to its small letter.', 'Gumuhit ng linya mula sa malaking titik papunta sa maliit na titik.'],
+        numbers: ['Draw a line from each number to the group with that many.', 'Gumuhit ng linya mula sa bilang papunta sa grupong may ganoong dami.'],
+      }[o.kind];
+      return { title: { en: 'Draw a line to match', fil: 'Pagtambalin' }, instr: { en: m[0], fil: m[1] } };
+    },
+    draw(ctx, A, o, r) {
+      const n = { nursery: 4, prek: 5, kinder: 6 }[o.age], rowH = A.h / n, S = Math.min(rowH * 0.7, 32);
+      const xL = A.x + A.w * 0.2, xR = A.x + A.w * 0.8, per = 5, gsz = Math.min(S * 0.42, (A.w * 0.36) / (per * 1.05));
+      let left = [], right = [];
+      if (o.kind === 'letters') {
+        const ls = shuffle(r, ALPHA_EN).slice(0, n);
+        left = ls.map(function (k) { return { t: 'glyph', k: k }; });
+        right = shuffle(r, ls).map(function (k) { return { t: 'glyph', k: k.toLowerCase() }; });
+      } else if (o.kind === 'numbers') {
+        const maxN = o.age === 'nursery' ? 5 : 10, icon = pick(r, COUNT_ICONS);
+        const ns = shuffle(r, Array.from({ length: maxN }, function (_, i) { return i + 1; })).slice(0, n);
+        left = ns.map(function (v) { return { t: 'num', v: v }; });
+        right = shuffle(r, ns).map(function (v) { return { t: 'group', v: v, k: icon }; });
+      } else {
+        const ic = shuffle(r, COUNT_ICONS).slice(0, n);
+        left = ic.map(function (k) { return { t: 'icon', k: k }; });
+        right = shuffle(r, ic).map(function (k) { return { t: 'icon', k: k, shadow: o.kind === 'shadows' }; });
+      }
+      const halfL = S * 0.55, halfR = o.kind === 'numbers' ? (per * gsz * 1.05) / 2 : S * 0.55;
+      const drawItem = function (it, cx, cy) {
+        if (it.t === 'icon') drawIcon(ctx, it.k, cx, cy, S, it.shadow ? 'shadow' : o.pic);
+        else if (it.t === 'glyph') drawGlyphCentered(ctx, it.k, cx, cy, S * 0.78, 'ink', { inkWidth: S * 0.058 });
+        else if (it.t === 'num') {
+          const ds = String(it.v).split(''), h = S * 0.74, sw = seqWidth(ds, h, h * 0.1);
+          drawSeq(ctx, ds, cx - sw / 2, cy - h / 2, h, 'ink', h * 0.1, { inkWidth: h * 0.08 });
+        } else if (it.t === 'group') {
+          const rowsN = Math.ceil(it.v / per);
+          for (let k = 0; k < it.v; k++) {
+            const kr = Math.floor(k / per), kc = k % per, inRow = Math.min(per, it.v - kr * per);
+            drawIcon(ctx, it.k, cx + (kc - (inRow - 1) / 2) * gsz * 1.05, cy + (kr - (rowsN - 1) / 2) * gsz * 1.05, gsz, o.pic);
+          }
+        }
+      };
+      for (let i = 0; i < n; i++) {
+        const cy = A.y + rowH * (i + 0.5);
+        drawItem(left[i], xL, cy);
+        drawItem(right[i], xR, cy);
+        fillCircle(ctx, xL + halfL + 5, cy, 1.5, C.ink);
+        fillCircle(ctx, xR - halfR - 5, cy, 1.5, C.ink);
+      }
+    },
+  },
+
+  patterns: {
+    name: 'Patterns', sub: 'What comes next?', hash: 'patterns',
+    options: [{ key: 'ptype', label: 'Pattern', def: 'mixed', choices: [['mixed', 'Mixed, by age'], ['AB', 'AB (apple, ball, apple, ball)'], ['AAB', 'AAB'], ['ABB', 'ABB'], ['ABC', 'ABC'], ['AABB', 'AABB']] }],
+    tip: 'Say the pattern aloud together like a chant, then ask what comes next. Clapping or stomping the pattern helps children feel the repeat before they see it.',
+    words() {
+      return {
+        title: { en: 'What comes next?', fil: 'Ano ang susunod?' },
+        instr: { en: 'Say the pattern out loud. Circle the picture that comes next.', fil: 'Sabihin nang malakas ang padron. Bilugan ang larawang susunod.' },
+      };
+    },
+    draw(ctx, A, o, r) {
+      const rows = { nursery: 3, prek: 4, kinder: 5 }[o.age], shown = o.age === 'nursery' ? 5 : 7, nOpt = o.age === 'nursery' ? 2 : 3;
+      const types = o.ptype === 'mixed' ? shuffle(r, PATTERN_BY_AGE[o.age]) : [o.ptype];
+      const icons = shuffle(r, COUNT_ICONS), rowH = A.h / rows;
+      for (let i = 0; i < rows; i++) {
+        const pt = PATTERNS[types[i % types.length]], units = Math.max.apply(null, pt) + 1;
+        const syms = icons.slice(i * 3, i * 3 + units), seq = [];
+        for (let k = 0; k <= shown; k++) seq.push(pt[k % pt.length]);
+        const answer = syms[seq[shown]];
+        const cells = shown + 1 + 0.7 + nOpt, cw = Math.min(A.w / cells, rowH * 0.8), S = cw * 0.8;
+        const cy = A.y + rowH * (i + 0.5), x0 = A.x + (A.w - cells * cw) / 2 + cw / 2;
+        for (let k = 0; k < shown; k++) drawIcon(ctx, syms[seq[k]], x0 + k * cw, cy, S, o.pic);
+        const bx = x0 + shown * cw;
+        roundRect(ctx, bx - S / 2, cy - S / 2, S, S, 2.2);
+        ctx.save(); ctx.setLineDash([1.4, 1.1]); ctx.lineWidth = 0.45; ctx.strokeStyle = C.soft; ctx.stroke(); ctx.restore();
+        text(ctx, '?', bx, cy + S * 0.17, { size: S * 0.5, weight: 600, font: FONT_D, align: 'center', color: C.guide });
+        const ox = bx + cw * 1.7, pool = [answer];
+        syms.forEach(function (sy) { if (pool.length < nOpt && pool.indexOf(sy) < 0) pool.push(sy); });
+        for (let e = icons.length - 1; pool.length < nOpt && e >= 0; e--) { if (pool.indexOf(icons[e]) < 0) pool.push(icons[e]); }
+        roundRect(ctx, ox - cw / 2 - 1.5, cy - cw / 2 - 1, nOpt * cw + 3, cw + 2, 3);
+        ctx.fillStyle = '#f1f5f8'; ctx.fill(); ctx.lineWidth = 0.3; ctx.strokeStyle = C.box; ctx.stroke();
+        shuffle(r, pool).forEach(function (sy, j) { drawIcon(ctx, sy, ox + j * cw, cy, S * 0.86, o.pic); });
+        if (i < rows - 1) rowSep(ctx, A, A.y + rowH * (i + 1));
+      }
+    },
+  },
+
+  hunt: {
+    name: 'Letter hunt', sub: 'Find and circle', hash: 'letter-hunt',
+    options: [
+      { key: 'hletter', label: 'Letter', def: 'B', choices: ALPHA_EN.concat(['Ñ']).map(function (L) { return [L, L + ' ' + L.toLowerCase()]; }) },
+      { key: 'hkase', label: 'Case', def: 'both', choices: CASES },
+    ],
+    tip: 'Letter hunts train the eye for reading. Kinder sheets mix in look-alike letters such as b, d and p on purpose. Afterwards, count the circled letters together.',
+    prepare(o) { return { L: o.hletter }; },
+    words(o, info) {
+      const L = info.L, lo = L.toLowerCase();
+      const en = o.hkase === 'upper' ? L : o.hkase === 'lower' ? lo : L + ' and ' + lo;
+      const fil = o.hkase === 'upper' ? L : o.hkase === 'lower' ? lo : L + ' at ' + lo;
+      return { title: { en: 'Find the letter ' + L, fil: 'Hanapin ang titik ' + L }, instr: { en: 'Find and circle every ' + en + '.', fil: 'Hanapin at bilugan ang lahat ng ' + fil + '.' } };
+    },
+    draw(ctx, A, o, r, info) {
+      const L = info.L, lo = L.toLowerCase(), grid = { nursery: [4, 5], prek: [5, 6], kinder: [6, 8] }[o.age], cols = grid[0], rows = grid[1];
+      const targets = [];
+      if (o.hkase !== 'lower') targets.push(L);
+      if (o.hkase !== 'upper') targets.push(lo);
+      const topH = 24;
+      panelBox(ctx, A.x, A.y, A.w, topH);
+      const lab = o.lang === 'fil' ? 'Hanapin:' : o.lang === 'both' ? 'Find / Hanapin:' : 'Find:';
+      text(ctx, lab, A.x + 6, A.y + topH / 2 + 2, { size: 5.2, weight: 600, font: FONT_D });
+      let tx = A.x + 12 + measure(ctx, lab, 5.2, 600, FONT_D);
+      const th = 15;
+      targets.forEach(function (k) {
+        const g = GL[k], bw = (g.box.maxX - g.box.minX) * th / 100;
+        drawGlyphCentered(ctx, k, tx + bw / 2, A.y + topH / 2, th, 'ink', { inkWidth: th * 0.09, color: C.goDark });
+        tx += bw + 8;
+      });
+      const gy = A.y + topH + 5, bottomH = o.age === 'nursery' ? 0 : 12, gh = A.h - topH - 5 - bottomH;
+      const cw = A.w / cols, ch = gh / rows, cellS = Math.min(cw, ch), total = cols * rows, nT = Math.max(3, Math.round(total * 0.3));
+      let pool = distractors(L, o.hkase, o.age);
+      if (o.age === 'nursery') pool = shuffle(r, pool).slice(0, 3);
+      const marks = shuffle(r, Array.from({ length: total }, function (_, i) { return i < nT; }));
+      const gH = cellS * 0.46;
+      for (let i = 0; i < total; i++) {
+        const cx = A.x + ((i % cols) + 0.5) * cw, cy = gy + (Math.floor(i / cols) + 0.5) * ch;
+        drawGlyphCentered(ctx, marks[i] ? pick(r, targets) : pick(r, pool), cx, cy, gH, 'ink', { inkWidth: gH * 0.085 });
+      }
+      if (bottomH) {
+        const q = o.lang === 'fil' ? 'Ilan ang nakita mo?' : o.lang === 'both' ? 'How many did you find? / Ilan?' : 'How many did you find?';
+        text(ctx, q, A.x, A.y + A.h - 3, { size: 4.6, weight: 600 });
+        const qw = measure(ctx, q, 4.6, 600);
+        strokePoly(ctx, [[A.x + qw + 3, A.y + A.h - 2.4], [A.x + qw + 30, A.y + A.h - 2.4]], 0.35, C.soft);
+      }
+    },
+  },
+
+  maze: {
+    name: 'Maze', sub: 'Pencil control', hash: 'maze', options: [],
+    tip: 'Mazes build pencil control and planning. Let children find the way with a finger first, then with a crayon. Remind them to stay between the walls.',
+    prepare(o, pageIdx, r) { return { pair: pick(r, PAIRS) }; },
+    words(o, info) {
+      const a = info.pair[0], b = info.pair[1];
+      return {
+        title: { en: 'Find the way', fil: 'Hanapin ang daan' },
+        instr: { en: 'Help the ' + NAMES[a][0] + ' find the ' + NAMES[b][0] + '.', fil: 'Tulungan ang ' + NAMES[a][1] + ' na mahanap ang ' + NAMES[b][1] + '.' },
+      };
+    },
+    draw(ctx, A, o, r, info) {
+      const grid = { nursery: [4, 4], prek: [6, 6], kinder: [8, 9] }[o.age], cols = grid[0], rows = grid[1];
+      const isz = { nursery: 24, prek: 20, kinder: 16 }[o.age];
+      const cs = Math.min((A.w - 2 * (isz + 5)) / cols, (A.h - 4) / rows);
+      const W = cs * cols, H = cs * rows, mx = A.x + (A.w - W) / 2, my = A.y + (A.h - H) / 2;
+      const walls = makeMaze(cols, rows, r);
+      walls[0] &= ~8;
+      walls[cols * rows - 1] &= ~2;
+      ctx.save();
+      ctx.strokeStyle = C.ink; ctx.lineWidth = Math.max(0.9, cs * 0.06); ctx.lineCap = 'round';
+      ctx.beginPath();
+      for (let yy = 0; yy < rows; yy++) {
+        for (let xx = 0; xx < cols; xx++) {
+          const w = walls[yy * cols + xx], px = mx + xx * cs, py = my + yy * cs;
+          if (w & 1) { ctx.moveTo(px, py); ctx.lineTo(px + cs, py); }
+          if (w & 8) { ctx.moveTo(px, py); ctx.lineTo(px, py + cs); }
+          if (xx === cols - 1 && (w & 2)) { ctx.moveTo(px + cs, py); ctx.lineTo(px + cs, py + cs); }
+          if (yy === rows - 1 && (w & 4)) { ctx.moveTo(px, py + cs); ctx.lineTo(px + cs, py + cs); }
+        }
+      }
+      ctx.stroke();
+      ctx.restore();
+      drawIcon(ctx, info.pair[0], mx - isz / 2 - 3, my + cs / 2, isz, o.pic);
+      drawIcon(ctx, info.pair[1], mx + W + isz / 2 + 3, my + H - cs / 2, isz, o.pic);
+      fillCircle(ctx, mx + cs * 0.18, my + cs / 2, Math.max(1, cs * 0.07), C.go);
+    },
+  },
+
+  dots: {
+    name: 'Dot to dot', sub: 'Connect 1, 2, 3', hash: 'dot-to-dot',
+    options: [{ key: 'dshape', label: 'Picture', def: 'random', choices: [['random', 'Surprise me']].concat(Object.keys(DOT_SHAPES).map(function (k) { return [k, DOT_SHAPES[k].label]; })) }],
+    tip: 'Say each number aloud while connecting the dots. Dot 1 is green. When the picture appears, ask children to name it and color it in.',
+    prepare(o, pageIdx, r) {
+      const key = o.dshape === 'random' ? pick(r, DOT_BY_AGE[o.age]) : o.dshape;
+      const sh = DOT_SHAPES[key], target = DOT_N[o.age];
+      let pts;
+      if (sh.curve) pts = heartPoints(target % 2 ? target + 1 : target);
+      else { const base = sh.star ? pairs(starPoly(50, 54, 44, 19)) : sh.pts; pts = densify(base, Math.max(base.length, target)); }
+      return { key: key, pts: pts, n: pts.length };
+    },
+    words(o, info) {
+      return {
+        title: { en: 'Connect the dots', fil: 'Pagdugtungin ang mga tuldok' },
+        instr: { en: 'Connect the dots from 1 to ' + info.n + '. Then color your picture!', fil: 'Pagdugtungin ang mga tuldok mula 1 hanggang ' + info.n + '. Pagkatapos, kulayan!' },
+      };
+    },
+    draw(ctx, A, o, r, info) {
+      const sh = DOT_SHAPES[info.key], size = Math.min(A.w, A.h) * 0.84;
+      const ox = A.x + (A.w - size) / 2, oy = A.y + (A.h - size) / 2, s = size / 100;
+      if (sh.extras) drawSpecs(ctx, sh.extras, ox, oy, s, 'line', 0.6);
+      let gx = 0, gy = 0;
+      info.pts.forEach(function (p) { gx += p[0]; gy += p[1]; });
+      gx /= info.pts.length; gy /= info.pts.length;
+      const fs = { nursery: 6.4, prek: 5.2, kinder: 4.4 }[o.age], off = fs * 0.9 + 1.8;
+      info.pts.forEach(function (p, i) {
+        const x = ox + p[0] * s, y = oy + p[1] * s;
+        let dx = p[0] - gx, dy = p[1] - gy;
+        const d = Math.hypot(dx, dy) || 1;
+        dx /= d; dy /= d;
+        fillCircle(ctx, x, y, i === 0 ? 1.7 : 1.3, i === 0 ? C.go : C.ink);
+        text(ctx, String(i + 1), x + dx * off, y + dy * off, { size: fs, weight: 600, font: FONT_D, align: 'center', baseline: 'middle', color: i === 0 ? C.goDark : C.ink });
+      });
+    },
+  },
+};
+
+/* ================= app state ================= */
+const LS_KEY = 'tuldok-worksheets-v1';
+const DEFAULTS = { type: 'letters', age: 'prek', lang: 'both', support: 'fade', pic: 'line', paper: 'a4', pages: 1, nameLine: true, school: '', seed: 1, opts: {} };
+const SUPPORT = [['fade', 'Fade row by row (recommended)'], ['solid', 'Solid gray to trace over'], ['dots', 'Dotted lines'], ['dash', 'Dashed lines']];
+const LANGS = [['en', 'English'], ['fil', 'Filipino'], ['both', 'Both']];
+const PICS = [['line', 'Outlines to color'], ['color', 'Color pictures']];
+let page = 0, raf = 0, lastErr = null;
+let st = loadState();
+
+function loadState() {
+  const out = JSON.parse(JSON.stringify(DEFAULTS));
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch (e) { s = null; }
+  if (s && typeof s === 'object') {
+    if (TYPES[s.type]) out.type = s.type;
+    if (AGES[s.age]) out.age = s.age;
+    if (LANGS.some(function (x) { return x[0] === s.lang; })) out.lang = s.lang;
+    if (SUPPORT.some(function (x) { return x[0] === s.support; })) out.support = s.support;
+    if (s.pic === 'line' || s.pic === 'color') out.pic = s.pic;
+    if (PAPERS[s.paper]) out.paper = s.paper;
+    const pg = parseInt(s.pages, 10);
+    if (pg >= 1 && pg <= 10) out.pages = pg;
+    if (typeof s.nameLine === 'boolean') out.nameLine = s.nameLine;
+    if (typeof s.school === 'string') out.school = s.school.slice(0, 80);
+    if (typeof s.seed === 'number' && isFinite(s.seed)) out.seed = s.seed;
+    if (s.opts && typeof s.opts === 'object') out.opts = s.opts;
+  }
+  return out;
+}
+function saveState() { try { localStorage.setItem(LS_KEY, JSON.stringify(st)); } catch (e) { /* storage unavailable: settings are not remembered */ } }
+function merged(s) {
+  const t = TYPES[s.type] || TYPES.letters, cur = (s.opts && s.opts[s.type]) || {}, o = Object.assign({}, s);
+  t.options.forEach(function (op) { o[op.key] = op.choices.some(function (c) { return c[0] === cur[op.key]; }) ? cur[op.key] : op.def; });
+  return o;
+}
+function typeOpts(type) {
+  if (!st.opts[type] || typeof st.opts[type] !== 'object') st.opts[type] = {};
+  const cur = st.opts[type];
+  TYPES[type].options.forEach(function (op) { if (!op.choices.some(function (c) { return c[0] === cur[op.key]; })) cur[op.key] = op.def; });
+  return cur;
+}
+function onSheetError(err) { lastErr = err; }
+function pageCount() { const t = TYPES[st.type], mp = t.multipage ? t.multipage(merged(st)) : 0; return mp || st.pages; }
+function typeFromHash() {
+  let h = '';
+  try { h = decodeURIComponent((location.hash || '').replace(/^#/, '')); } catch (e) { h = ''; }
+  const keys = Object.keys(TYPES);
+  for (let i = 0; i < keys.length; i++) if (TYPES[keys[i]].hash === h) return keys[i];
+  return null;
+}
+
+/* ================= controls ================= */
+function fillSelect(sel, items, val) {
+  sel.innerHTML = '';
+  items.forEach(function (it) { const op = document.createElement('option'); op.value = it[0]; op.textContent = it[1]; sel.appendChild(op); });
+  sel.value = String(val);
+}
+function seg(id, items, getVal, setVal) {
+  const box = document.getElementById(id);
+  box.innerHTML = '';
+  items.forEach(function (it) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.id = id + '-' + it[0];
+    b.textContent = it[1];
+    b.setAttribute('aria-pressed', String(getVal() === it[0]));
+    b.addEventListener('click', function () {
+      setVal(it[0]);
+      box.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      changed();
+    });
+    box.appendChild(b);
+  });
+}
+function buildTypes() {
+  const box = document.getElementById('types');
+  box.innerHTML = '';
+  Object.keys(TYPES).forEach(function (k) {
+    const t = TYPES[k], b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'type-btn';
+    b.id = 'type-' + k;
+    b.setAttribute('aria-pressed', String(st.type === k));
+    const nm = document.createElement('span'); nm.className = 'tn'; nm.textContent = t.name;
+    const sb = document.createElement('span'); sb.className = 'ts'; sb.textContent = t.sub;
+    b.appendChild(nm);
+    b.appendChild(sb);
+    b.addEventListener('click', function () { setType(k, false); });
+    box.appendChild(b);
+  });
+}
+function buildTypeOptions() {
+  const t = TYPES[st.type], cur = typeOpts(st.type), box = document.getElementById('typeOptions');
+  box.innerHTML = '';
+  t.options.forEach(function (op) {
+    const id = 'opt-' + st.type + '-' + op.key, f = document.createElement('div'), lab = document.createElement('label'), sel = document.createElement('select');
+    f.className = 'field';
+    lab.htmlFor = id;
+    lab.textContent = op.label;
+    sel.id = id;
+    fillSelect(sel, op.choices, cur[op.key]);
+    sel.addEventListener('change', function () { cur[op.key] = sel.value; page = 0; changed(); });
+    f.appendChild(lab);
+    f.appendChild(sel);
+    box.appendChild(f);
+  });
+  box.hidden = t.options.length === 0;
+  document.getElementById('supportField').hidden = !t.tracing;
+  document.getElementById('tipText').textContent = t.tip;
+}
+function setType(k, fromHash) {
+  if (!TYPES[k]) return;
+  st.type = k;
+  page = 0;
+  document.querySelectorAll('.type-btn').forEach(function (b) { b.setAttribute('aria-pressed', String(b.id === 'type-' + k)); });
+  buildTypeOptions();
+  if (!fromHash) { try { if (location.hash !== '#' + TYPES[k].hash) location.hash = TYPES[k].hash; } catch (e) { /* no hash in this view */ } }
+  changed();
+}
+
+/* ================= preview ================= */
+function schedule() { if (raf) return; raf = requestAnimationFrame(function () { raf = 0; renderPreview(); }); }
+function changed() { saveState(); schedule(); }
+function renderPreview() {
+  const cv = document.getElementById('sheet'), paper = PAPERS[st.paper] || PAPERS.a4;
+  const cssW = Math.max(260, Math.min(cv.clientWidth || (cv.parentElement && cv.parentElement.clientWidth) || 600, 1000));
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  const pxW = Math.round(cssW * dpr), pxH = Math.round(pxW * paper.h / paper.w);
+  if (cv.width !== pxW) cv.width = pxW;
+  if (cv.height !== pxH) cv.height = pxH;
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(pxW / paper.w, 0, 0, pxW / paper.w, 0, 0);
+  const n = pageCount();
+  page = Math.max(0, Math.min(page, n - 1));
+  lastErr = null;
+  drawPage(ctx, st, page);
+  const t = TYPES[st.type];
+  document.getElementById('pageLabel').textContent = 'Page ' + (page + 1) + ' of ' + n;
+  document.getElementById('prev').disabled = page <= 0;
+  document.getElementById('next').disabled = page >= n - 1;
+  document.getElementById('pagesField').hidden = !!(t.multipage && t.multipage(merged(st)));
+  cv.setAttribute('aria-label', t.name + ' worksheet preview, page ' + (page + 1) + ' of ' + n);
+  if (lastErr) status('This sheet hit a bug: ' + ((lastErr && lastErr.message) || lastErr) + '. Please report this message.');
+}
+
+/* ================= export: PDF, print, share ================= */
+const EXPORT_DPI = 180;
+const framed = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
+function hasClaude() { return !!(window.claude && typeof window.claude.use === 'function'); }
+function setBusy(b) { ['download', 'print', 'share', 'shuffle'].forEach(function (id) { const el = document.getElementById(id); if (el) el.disabled = b; }); }
+function nextTick() { return new Promise(function (res) { setTimeout(res, 0); }); }
+function fileName() {
+  const o = merged(st), t = TYPES[st.type];
+  let d = '';
+  if (st.type === 'letters') d = o.letter.indexOf('all') === 0 ? o.letter : 'letter-' + o.letter;
+  else if (st.type === 'numbers') d = o.num.indexOf('all') === 0 ? o.num : 'number-' + o.num;
+  else if (st.type === 'hunt') d = o.hletter;
+  d = d.replace(/Ñ/g, 'enye').replace(/[^A-Za-z0-9-]/g, '');
+  return 'tuldok-' + t.hash + (d ? '-' + d : '') + '-' + st.age + '.pdf';
+}
+function canvasJpeg(cv, q) {
+  return new Promise(function (resolve, reject) {
+    if (cv.toBlob) {
+      cv.toBlob(function (b) {
+        if (!b) { reject(new Error('Could not turn a page into an image.')); return; }
+        if (b.arrayBuffer) { b.arrayBuffer().then(function (ab) { resolve(new Uint8Array(ab)); }, reject); return; }
+        const fr = new FileReader();
+        fr.onload = function () { resolve(new Uint8Array(fr.result)); };
+        fr.onerror = function () { reject(fr.error); };
+        fr.readAsArrayBuffer(b);
+      }, 'image/jpeg', q);
+    } else {
+      const u = cv.toDataURL('image/jpeg', q), bin = atob(u.slice(u.indexOf(',') + 1)), out = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+      resolve(out);
+    }
+  });
+}
+/* Minimal PDF writer: one full-page JPEG per page, sized to the chosen paper. */
+function makePdf(jpegs, wPx, hPx, wPt, hPt) {
+  const parts = [], offsets = [];
+  let offset = 0;
+  const enc = function (s) { const b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i) & 255; return b; };
+  const add = function (b) { parts.push(b); offset += b.length; };
+  const addObj = function (num, body) { offsets[num] = offset; add(enc(num + ' 0 obj\n' + body + '\nendobj\n')); };
+  add(enc('%PDF-1.4\n'));
+  add(new Uint8Array([0x25, 0xE2, 0xE3, 0xCF, 0xD3, 0x0A]));
+  const n = jpegs.length, W = wPt.toFixed(2), H = hPt.toFixed(2), kids = [];
+  for (let i = 0; i < n; i++) kids.push((3 + i * 3) + ' 0 R');
+  addObj(1, '<< /Type /Catalog /Pages 2 0 R >>');
+  addObj(2, '<< /Type /Pages /Kids [' + kids.join(' ') + '] /Count ' + n + ' >>');
+  jpegs.forEach(function (jpg, i) {
+    const p = 3 + i * 3, im = p + 1, ct = p + 2;
+    addObj(p, '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + W + ' ' + H + '] /Resources << /XObject << /Im0 ' + im + ' 0 R >> /ProcSet [/PDF /ImageC] >> /Contents ' + ct + ' 0 R >>');
+    offsets[im] = offset;
+    add(enc(im + ' 0 obj\n<< /Type /XObject /Subtype /Image /Width ' + wPx + ' /Height ' + hPx + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + jpg.length + ' >>\nstream\n'));
+    add(jpg);
+    add(enc('\nendstream\nendobj\n'));
+    const content = 'q ' + W + ' 0 0 ' + H + ' 0 0 cm /Im0 Do Q';
+    addObj(ct, '<< /Length ' + content.length + ' >>\nstream\n' + content + '\nendstream');
+  });
+  const total = 3 + n * 3, xrefAt = offset;
+  let x = 'xref\n0 ' + total + '\n0000000000 65535 f \n';
+  for (let k = 1; k < total; k++) x += String(offsets[k]).padStart(10, '0') + ' 00000 n \n';
+  add(enc(x));
+  add(enc('trailer\n<< /Size ' + total + ' /Root 1 0 R >>\nstartxref\n' + xrefAt + '\n%%EOF\n'));
+  return new Blob(parts, { type: 'application/pdf' });
+}
+async function buildPdf(progress) {
+  const paper = PAPERS[st.paper] || PAPERS.a4, pxPerMm = EXPORT_DPI / 25.4;
+  const cw = Math.round(paper.w * pxPerMm), ch = Math.round(paper.h * pxPerMm);
+  const cv = document.createElement('canvas');
+  cv.width = cw;
+  cv.height = ch;
+  const ctx = cv.getContext('2d'), n = pageCount(), jpegs = [];
+  for (let i = 0; i < n; i++) {
+    ctx.setTransform(pxPerMm, 0, 0, pxPerMm, 0, 0);
+    drawPage(ctx, st, i);
+    jpegs.push(await canvasJpeg(cv, 0.9));
+    if (progress) progress(i + 1, n);
+    await nextTick();
+  }
+  return makePdf(jpegs, cw, ch, paper.w * 72 / 25.4, paper.h * 72 / 25.4);
+}
+async function onDownload() {
+  setBusy(true);
+  try {
+    const blob = await buildPdf(function (i, n) { status('Making page ' + i + ' of ' + n + '…'); });
+    const name = fileName();
+    if (androidBridge()) { await sendToAndroid(blob, name, 'save'); return; }
+    if (hasClaude()) {
+      let dl = null;
+      try { dl = await window.claude.use('downloads'); } catch (e) { dl = null; }
+      if (!dl) { status('Saving files is switched off in this view. Open this page in claude.ai to download PDFs.'); return; }
+      try {
+        await dl.save({ filename: name, data: blob });
+        status('Saved ' + name + '. Print at 100% (Actual size) so the letters keep their size.');
+      } catch (e) {
+        const code = e && e.code;
+        if (code === 'declined') status('Download cancelled.');
+        else if (code === 'rate_limited') status('A save prompt is already open. Finish it, then try again.');
+        else status('Could not save the PDF (' + (code || (e && e.message) || 'unknown error') + ').');
+      }
+    } else {
+      const url = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+      status('Downloaded ' + name + '. Print at 100% (Actual size) so the letters keep their size.');
+    }
+  } catch (e) {
+    status('Could not make the PDF: ' + ((e && e.message) || e));
+  } finally {
+    setBusy(false);
+  }
+}
+async function onPrint() {
+  setBusy(true);
+  try {
+    if (androidBridge()) {
+      const pdf = await buildPdf(function (i, n) { status('Making page ' + i + ' of ' + n + '…'); });
+      await sendToAndroid(pdf, fileName(), 'print');
+      return;
+    }
+    const paper = PAPERS[st.paper] || PAPERS.a4, pxPerMm = EXPORT_DPI / 25.4;
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(paper.w * pxPerMm);
+    cv.height = Math.round(paper.h * pxPerMm);
+    const ctx = cv.getContext('2d'), area = document.getElementById('printArea'), n = pageCount();
+    area.innerHTML = '';
+    for (let i = 0; i < n; i++) {
+      ctx.setTransform(pxPerMm, 0, 0, pxPerMm, 0, 0);
+      drawPage(ctx, st, i);
+      const img = new Image();
+      img.className = 'print-page';
+      img.alt = '';
+      img.style.width = paper.w + 'mm';
+      img.style.height = paper.h + 'mm';
+      img.src = cv.toDataURL('image/jpeg', 0.92);
+      area.appendChild(img);
+      status('Preparing page ' + (i + 1) + ' of ' + n + '…');
+      await nextTick();
+    }
+    document.getElementById('pageStyle').textContent = '@page { size: ' + paper.w + 'mm ' + paper.h + 'mm; margin: 0; }';
+    await Promise.all(Array.prototype.map.call(area.querySelectorAll('img'), function (im) { return im.decode ? im.decode().catch(function () { return null; }) : null; }));
+    status('');
+    window.print();
+  } catch (e) {
+    status(androidBridge() ? 'Could not print: ' + ((e && e.message) || e) : 'Printing is not available here. Use Download PDF instead.');
+  } finally {
+    setBusy(false);
+  }
+}
+async function onShare() {
+  setBusy(true);
+  try {
+    const blob = await buildPdf(function (i, n) { status('Making page ' + i + ' of ' + n + '…'); });
+    if (androidBridge()) { await sendToAndroid(blob, fileName(), 'share'); return; }
+    const file = new File([blob], fileName(), { type: 'application/pdf' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Worksheet' });
+      status('Shared.');
+    } else {
+      status('This device cannot share files. Use Download PDF instead.');
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') status('');
+    else status('Could not share: ' + ((e && e.message) || e));
+  } finally {
+    setBusy(false);
+  }
+}
+/* ---- Android app bridge: the APK injects window.TuldokAndroid (begin / append / done) ---- */
+function androidBridge() { return window.TuldokAndroid || null; }
+function blobToBase64(b) {
+  return new Promise(function (resolve, reject) {
+    const fr = new FileReader();
+    fr.onload = function () { const s = String(fr.result); resolve(s.slice(s.indexOf(',') + 1)); };
+    fr.onerror = function () { reject(fr.error); };
+    fr.readAsDataURL(b);
+  });
+}
+async function sendToAndroid(blob, name, action) {
+  const bridge = androidBridge();
+  if (!bridge.begin(name)) throw new Error('The app could not start the file.');
+  const CHUNK = 3 * 131072; /* a multiple of 3 bytes, so every piece is complete base64 */
+  for (let off = 0; off < blob.size; off += CHUNK) {
+    const b64 = await blobToBase64(blob.slice(off, off + CHUNK));
+    if (!bridge.append(b64)) throw new Error('The app could not write the file.');
+    status('Handing the PDF to the app… ' + Math.min(100, Math.round(((off + CHUNK) / blob.size) * 100)) + '%');
+  }
+  bridge.done(action + '|' + st.paper);
+}
+window.__tuldokNotify = function (msg) { status(String(msg || '')); };
+
+function setupExportButtons() {
+  if (androidBridge()) {
+    document.getElementById('download').textContent = 'Save PDF';
+    document.getElementById('print').hidden = false;
+    document.getElementById('share').hidden = false;
+    return;
+  }
+  if (!framed && !hasClaude()) {
+    document.getElementById('print').hidden = false;
+    if (navigator.canShare && navigator.share && window.File) document.getElementById('share').hidden = false;
+  }
+  if (hasClaude()) {
+    window.claude.use('downloads').then(function (ns) {
+      if (!ns) {
+        document.getElementById('download').hidden = true;
+        status('Saving files is switched off in this view. Open this page in claude.ai to download PDFs.');
+      }
+    }, function () { /* leave the button; the click explains any problem */ });
+  }
+}
+
+/* ================= start ================= */
+function init() {
+  const fromHash = typeFromHash();
+  if (fromHash) st.type = fromHash;
+  typeOpts(st.type);
+  buildTypes();
+  seg('age', Object.keys(AGES).map(function (k) { return [k, AGES[k].label]; }), function () { return st.age; }, function (v) { st.age = v; page = 0; });
+  seg('lang', LANGS, function () { return st.lang; }, function (v) { st.lang = v; });
+  seg('pic', PICS, function () { return st.pic; }, function (v) { st.pic = v; });
+  const sup = document.getElementById('support');
+  fillSelect(sup, SUPPORT, st.support);
+  sup.addEventListener('change', function () { st.support = sup.value; changed(); });
+  const pap = document.getElementById('paper');
+  fillSelect(pap, Object.keys(PAPERS).map(function (k) { return [k, PAPERS[k].label]; }), st.paper);
+  pap.addEventListener('change', function () { st.paper = pap.value; changed(); });
+  const pgs = document.getElementById('pages');
+  fillSelect(pgs, Array.from({ length: 10 }, function (_, i) { return [String(i + 1), String(i + 1)]; }), st.pages);
+  pgs.addEventListener('change', function () { st.pages = parseInt(pgs.value, 10) || 1; page = 0; changed(); });
+  const nl = document.getElementById('nameLine');
+  nl.checked = st.nameLine;
+  nl.addEventListener('change', function () { st.nameLine = nl.checked; changed(); });
+  const sc = document.getElementById('school');
+  let tmr = 0;
+  sc.value = st.school;
+  sc.addEventListener('input', function () { st.school = sc.value.slice(0, 80); clearTimeout(tmr); tmr = setTimeout(changed, 200); });
+  document.getElementById('prev').addEventListener('click', function () { if (page > 0) { page--; schedule(); } });
+  document.getElementById('next').addEventListener('click', function () { if (page < pageCount() - 1) { page++; schedule(); } });
+  document.getElementById('shuffle').addEventListener('click', function () { st.seed = (st.seed + 1) % 100000; changed(); });
+  document.getElementById('download').addEventListener('click', onDownload);
+  document.getElementById('print').addEventListener('click', onPrint);
+  document.getElementById('share').addEventListener('click', onShare);
+  buildTypeOptions();
+  setupExportButtons();
+  window.addEventListener('hashchange', function () { const k = typeFromHash(); if (k && k !== st.type) setType(k, true); });
+  if (window.ResizeObserver) new ResizeObserver(function () { schedule(); }).observe(document.querySelector('.sheetWrap'));
+  else window.addEventListener('resize', schedule);
+  renderPreview();
+  if (document.fonts && document.fonts.load) {
+    Promise.all(['600 20px "Fredoka"', '400 20px "Andika"', '700 20px "Andika"', 'italic 400 20px "Andika"'].map(function (f) {
+      return document.fonts.load(f).catch(function () { return null; });
+    })).then(function () { schedule(); });
+  }
+}
+init();
+
+})();
+</script>
+</body>
+</html>
