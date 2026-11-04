@@ -30,6 +30,18 @@ jobs:
         with:
           gradle-version: '8.7'
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Plays every game at every age group in headless Chrome and stops the build on any JavaScript error,
+      # so a broken app is never published. Also writes voice-lines.json (every line the app says),
+      # which the Colab voice maker downloads from the release.
+      - name: Test the games in Chrome
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund puppeteer-core@24
+          node tools/smoke.mjs
+
       # One test key for every build, so a new APK installs over the old one.
       # The first run creates it and keeps it on a pre-release named "signing-key".
       - name: Get or create the test signing key
@@ -59,11 +71,13 @@ jobs:
           name: tuldok-apk
           path: tuldok.apk
 
-      # Same download link every time: /releases/latest/download/tuldok.apk
+      # Same download links every time: /releases/download/latest-build/tuldok.apk (and voice-lines.json)
       - name: Publish to Releases
         run: |
+          FILES="tuldok.apk"
+          if [ -f voice-lines.json ]; then FILES="$FILES voice-lines.json"; fi
           gh release delete latest-build --yes --cleanup-tag || true
-          gh release create latest-build tuldok.apk \
+          gh release create latest-build $FILES \
             --target "$GITHUB_SHA" --latest \
             --title "Tuldok build ${GITHUB_RUN_NUMBER}" \
-            --notes "Built from ${GITHUB_SHA::7}. Download tuldok.apk on your phone or tablet and install it."
+            --notes "Version 0.1.${GITHUB_RUN_NUMBER}, built from ${GITHUB_SHA::7}. Download tuldok.apk on your phone or tablet and install it. voice-lines.json lists every line the app says, for the Colab voice maker."

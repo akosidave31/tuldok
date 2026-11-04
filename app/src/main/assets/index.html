@@ -45,11 +45,13 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .gear small { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-size: 11px; color: var(--muted); }
 .gear .fill { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: rgba(31, 157, 85, .25); }
 .gear.holding .fill { height: 100%; transition: height 1.2s linear; }
-.tiles { flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(clamp(150px, 26vw, 250px), 1fr)); gap: clamp(12px, 2.2vw, 22px); padding: 12px clamp(14px, 3vw, 32px) 26px; align-content: center; overflow-y: auto; }
-.tile { background: var(--card); border-radius: 28px; border-bottom: 8px solid var(--c); box-shadow: 0 10px 24px rgba(30, 60, 90, .12); display: grid; place-items: center; align-content: center; gap: 6px; padding: 18px 10px 14px; min-height: clamp(140px, 23vh, 210px); position: relative; }
+.tiles { flex: 1; overflow-y: auto; padding: 0 clamp(14px, 3vw, 32px) 30px; -webkit-overflow-scrolling: touch; }
+.sec-h { margin: 16px 6px 10px; font-family: var(--font-d); font-weight: 600; font-size: clamp(20px, 2.6vw, 28px); color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(132px, 19vw, 210px), 1fr)); gap: clamp(10px, 1.8vw, 18px); }
+.tile { background: var(--card); border-radius: 28px; border-bottom: 8px solid var(--c); box-shadow: 0 10px 24px rgba(30, 60, 90, .12); display: grid; place-items: center; align-content: center; gap: 6px; padding: 16px 8px 12px; min-height: clamp(118px, 17vh, 180px); position: relative; }
 .tile:active { transform: translateY(3px); }
-.tile .ic { font-size: clamp(46px, 7vw, 74px); line-height: 1; font-family: var(--font-d); font-weight: 700; color: var(--c); }
-.tile .nm { font-family: var(--font-d); font-weight: 600; font-size: clamp(20px, 2.6vw, 28px); text-align: center; }
+.tile .ic { font-size: clamp(40px, 6vw, 64px); line-height: 1; font-family: var(--font-d); font-weight: 700; color: var(--c); }
+.tile .nm { font-family: var(--font-d); font-weight: 600; font-size: clamp(17px, 2.2vw, 24px); text-align: center; }
 .tile .st { position: absolute; top: 10px; right: 14px; font-size: 16px; color: var(--muted); font-family: var(--font-d); }
 
 /* play */
@@ -91,6 +93,55 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .cell { width: var(--sz, 100px); height: var(--sz, 100px); border-radius: 22px; background: var(--card); box-shadow: 0 5px 0 rgba(0, 0, 0, .08); display: grid; place-items: center; font-size: calc(var(--sz, 100px) * .6); line-height: 1; }
 .cell.q { background: transparent; box-shadow: none; border: 5px dashed #9bb3c4; font-family: var(--font-d); font-weight: 700; color: #9bb3c4; }
 .cell.filled { border-style: solid; border-color: var(--go); background: #e3f6ea; }
+
+/* quiz games: listen or look, then tap the answer */
+.qtext { font-family: var(--font-d); font-weight: 600; font-size: clamp(20px, 2.8vw, 30px); color: var(--muted); text-align: center; }
+.qcard { min-width: clamp(110px, 17vw, 180px); height: clamp(110px, 17vw, 180px); padding: 0 22px; border-radius: 30px; background: var(--card); box-shadow: 0 6px 0 rgba(0, 0, 0, .1); display: grid; place-items: center; font-size: clamp(60px, 10vw, 112px); line-height: 1; }
+.qcard.txt { font-family: var(--font-b); font-weight: 700; }
+.qword { font-family: var(--font-b); font-weight: 700; font-size: clamp(60px, 11vw, 130px); letter-spacing: .08em; line-height: 1; padding: 8px 34px 18px; border-radius: 30px; background: var(--card); box-shadow: 0 6px 0 rgba(0, 0, 0, .1); }
+.opts { display: grid; grid-template-columns: repeat(var(--cols, 3), var(--sz, 120px)); gap: 22px; justify-content: center; }
+.opts.wide { grid-template-columns: repeat(2, var(--wz, 300px)); gap: 30px; }
+.opt { width: var(--sz, 120px); height: var(--sz, 120px); border-radius: 26%; background: var(--card); box-shadow: 0 6px 0 rgba(0, 0, 0, .1); display: grid; place-items: center; line-height: 1; font-size: calc(var(--sz, 120px) * .58); transition: opacity .2s; }
+.opt.txt { font-family: var(--font-b); font-weight: 700; font-size: calc(var(--sz, 120px) * .54); }
+.opt.svg svg { width: 80%; height: 80%; display: block; }
+.opts.wide .opt { width: var(--wz, 300px); border-radius: 30px; }
+.opt.right { background: #c9f2d9; }
+.opt.miss { opacity: .45; }
+.opt.hint { outline: 6px solid var(--sun); animation: glow 1s ease-in-out infinite; }
+@keyframes glow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+.grp { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: 4px; padding: 10px; font-size: var(--gz, 40px); line-height: 1.1; }
+.eq { display: flex; align-items: center; gap: clamp(8px, 2vw, 20px); padding: 10px 18px; border-radius: 28px; background: var(--card); box-shadow: 0 6px 0 rgba(0, 0, 0, .1); max-width: 96%; }
+.eq .grp { font-size: clamp(28px, 4.6vw, 50px); padding: 4px; max-width: 40vw; }
+.eq .op { font-family: var(--font-d); font-weight: 700; font-size: clamp(38px, 6vw, 64px); color: var(--muted); }
+
+/* memory cards */
+.mem { display: grid; grid-template-columns: repeat(var(--cols, 4), var(--sz, 110px)); gap: 14px; justify-content: center; }
+.mcard { width: var(--sz, 110px); height: var(--sz, 110px); border-radius: 22%; background: linear-gradient(145deg, #5aa9e6, #3d7fd9); box-shadow: 0 5px 0 rgba(0, 0, 0, .14); display: grid; place-items: center; font-size: calc(var(--sz, 110px) * .52); line-height: 1; }
+.mcard .face { display: none; }
+.mcard .back { font-size: .7em; }
+.mcard.up { background: var(--card); animation: flip .25s; }
+.mcard.up .face { display: block; }
+.mcard.up .back { display: none; }
+.mcard.done { background: #e3f6ea; }
+@keyframes flip { from { transform: scaleX(.15); } to { transform: scaleX(1); } }
+
+/* coloring book */
+.dom.full { padding: 4px 10px 10px; }
+.paint { flex: 1; width: 100%; min-height: 0; display: flex; gap: 14px; align-items: stretch; }
+.page { flex: 1; min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.page svg { width: 100%; height: 100%; display: block; }
+.page .r { stroke: #22313a; stroke-width: 4; stroke-linejoin: round; }
+.page .d { fill: none; stroke: #22313a; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.page .k { fill: #22313a; pointer-events: none; }
+.palette { display: grid; grid-template-columns: repeat(2, clamp(44px, 6.4vh, 60px)); grid-auto-rows: clamp(44px, 6.4vh, 60px); gap: 10px; align-content: center; }
+.swatch { border-radius: 50%; border: 4px solid #fff; box-shadow: 0 3px 0 rgba(0, 0, 0, .18); }
+.swatch.on { outline: 5px solid var(--ink); outline-offset: 1px; }
+.paint-done { grid-column: span 2; border-radius: 999px; background: var(--go); color: #fff; font-size: 30px; box-shadow: 0 4px 0 rgba(0, 0, 0, .15); }
+@media (orientation: portrait) {
+  .paint { flex-direction: column; }
+  .palette { grid-template-columns: none; grid-auto-flow: column; grid-template-rows: repeat(2, 48px); grid-auto-columns: 48px; justify-content: center; }
+  .paint-done { grid-column: auto; grid-row: span 2; }
+}
 
 .shake { animation: shake .45s; }
 @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-10px); } 40% { transform: translateX(10px); } 60% { transform: translateX(-8px); } 80% { transform: translateX(6px); } }
@@ -183,13 +234,16 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
     <div class="row"><span class="lab">Voice style</span><div id="setVoiceStyle" class="seg"></div></div>
     <button id="toPrint" class="wide" type="button">🖨️ Printable worksheets (PDF)</button>
     <button id="resetStars" class="wide" type="button">Reset stars</button>
-    <p class="note">The tracing games check that children start at the green dot and follow the arrow, the way letters are taught in class. Nursery gets wider paths and big letters only.</p>
+    <p class="note">The tracing games check that children start at the green dot and follow the arrow, the way letters are taught in class. Nursery gets wider paths and big letters only. Each age group sees the games that suit it: First sounds, Rhymes and Add it up start at Pre-K; First words starts at Kinder. After two wrong taps, the right answer glows.</p>
+    <p id="progress" class="note"></p>
     <p id="version" class="note"></p>
     <button id="closeGrown" class="done-btn" type="button">Done</button>
   </div>
 </div>
 <div id="err" class="err" hidden></div>
 
+<!-- Words, pictures, coloring pages and every spoken line. -->
+<script src="content.js"></script>
 <!-- Recorded voice clips (made in Colab by tools/make_voice.py). Missing file = device voice is used. -->
 <script src="voice/manifest.js"></script>
 <script>
@@ -211,6 +265,13 @@ function starPoly(cx, cy, R, rIn) {
 }
 function showError(msg) { const e = $('err'); e.textContent = 'Something went wrong: ' + msg + ' (screenshot this for the developer)'; e.hidden = false; setTimeout(function () { e.hidden = true; }, 9000); }
 window.addEventListener('error', function (e) { showError((e.message || 'unknown') + (e.lineno ? ' line ' + e.lineno : '')); });
+/* Game timers: anything scheduled with later() is dropped when the child leaves the game or moves on,
+   so a late timer can never change the next screen. (The build's smoke test shortens the waits.) */
+let gameToken = 0;
+function later(fn, ms) {
+  const t = gameToken;
+  return setTimeout(function () { if (t === gameToken) fn(); }, window.__tuldokFast ? Math.min(ms, 60) : ms);
+}
 
 const FONT_D = '"Fredoka", "Trebuchet MS", system-ui, sans-serif';
 const FONT_B = '"Andika", "Segoe UI", Roboto, system-ui, sans-serif';
@@ -265,19 +326,18 @@ document.addEventListener('pointerdown', function () { audio(); }, { once: true 
    in a browser, the built-in speech voice is used. */
 const VOICE = { jolly: { pitch: 1.4, rate: 0.95 }, calm: { pitch: 1.0, rate: 0.85 } };
 const CLIPS = (window.TULDOK_VOICE && window.TULDOK_VOICE.clips) || null;
-const missingClips = [];
 function vkey(t) { return String(t).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
 let clipEl = null, clipGen = 0;
 function say(text) { sayParts([text]); }
 /* Say several short lines back to back, e.g. ['Apple!', 'Star!', 'What comes next?']. */
 function sayParts(parts) {
   parts = (parts || []).filter(Boolean);
+  if (window.__tuldokTestLog) Array.prototype.push.apply(window.__tuldokTestLog, parts);
   if (!S.voice || !parts.length) return;
   stopVoice();
   if (S.voiceStyle === 'jolly' && CLIPS) {
     const files = parts.map(function (p) { return CLIPS[vkey(p)]; });
     if (files.every(Boolean)) { playClips(files, parts); return; }
-    parts.forEach(function (p) { if (!CLIPS[vkey(p)] && missingClips.indexOf(p) < 0) missingClips.push(p); });
   }
   deviceSay(parts.join(' '));
 }
@@ -420,39 +480,27 @@ function parseStroke(src) {
 const GL = {};
 Object.keys(GLYPH_SRC).forEach(function (key) { const src = GLYPH_SRC[key]; GL[key] = { w: src[0], strokes: src.slice(1).map(parseStroke) }; });
 
-/* ================= content ================= */
-const NUM = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
-const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-const CUE = { A: ['🍎', 'apple'], B: ['⚽', 'ball'], C: ['🐱', 'cat'], D: ['🐶', 'dog'], E: ['🥚', 'egg'], F: ['🐟', 'fish'], G: ['🍇', 'grapes'], H: ['🏠', 'house'], I: ['🍦', 'ice cream'], J: ['🧃', 'juice'], K: ['🪁', 'kite'], L: ['🦁', 'lion'], M: ['🌙', 'moon'], N: ['👃', 'nose'], O: ['🐙', 'octopus'], P: ['🐷', 'pig'], Q: ['👸', 'queen'], R: ['🌈', 'rainbow'], S: ['☀️', 'sun'], T: ['🌳', 'tree'], U: ['☂️', 'umbrella'], V: ['🎻', 'violin'], W: ['🍉', 'watermelon'], X: ['📦', 'box'], Y: ['🪀', 'yo-yo'], Z: ['🦓', 'zebra'] };
-const THINGS = [['🍎', 'apple'], ['⭐', 'star'], ['🐟', 'fish'], ['🌸', 'flower'], ['🚗', 'car'], ['🎈', 'balloon'], ['🐱', 'cat'], ['🐶', 'dog'], ['🦋', 'butterfly'], ['🥭', 'mango'], ['🍌', 'banana'], ['⚽', 'ball'], ['🐝', 'bee'], ['🌙', 'moon'], ['🐸', 'frog'], ['🦆', 'duck'], ['🍉', 'watermelon'], ['🐢', 'turtle'], ['🍓', 'strawberry'], ['🚌', 'bus']];
-const LINE_SET = [
-  { kind: 'horizontal', from: '🐝', to: '🌼', name: 'Sleeping line', say: 'Help the bee fly to the flower!' },
-  { kind: 'vertical', from: '☁️', to: '', name: 'Rain lines', say: 'Make rain! Draw from the top down!' },
-  { kind: 'circles', from: '⚽', to: '', name: 'Circles', say: 'Draw round circles, like a ball!' },
-  { kind: 'crosses', from: '⭐', to: '', name: 'Crosses', say: 'Draw a line down, then a line across!' },
-  { kind: 'slant', from: '🪁', to: '', name: 'Slanting lines', say: 'Draw slanting lines, like a kite string!' },
-  { kind: 'zigzag', from: '🐸', to: '🍃', name: 'Zigzag', say: 'Help the frog hop to the leaf!' },
-  { kind: 'waves', from: '🐟', to: '🐚', name: 'Waves', say: 'Swim like a fish to the shell!' },
-  { kind: 'arches', from: '🐰', to: '🥕', name: 'Hills', say: 'Hop like a bunny to the carrot!' },
-  { kind: 'loops', from: '🐞', to: '🌸', name: 'Loops', say: 'Loop all the way to the flower!' },
-];
-const SHAPE_SET = ['circle', 'square', 'triangle', 'rectangle', 'star', 'oval', 'heart', 'diamond'];
-const PATTERNS = { AB: [0, 1], AAB: [0, 0, 1], ABB: [0, 1, 1], ABC: [0, 1, 2], AABB: [0, 0, 1, 1] };
-const PAT_BY_AGE = { nursery: ['AB'], prek: ['AB', 'AAB', 'ABB'], kinder: ['AB', 'AAB', 'ABB', 'ABC', 'AABB'] };
-const PRAISE = ['Yay! Great job!', 'Woohoo! You did it!', 'Wow! Awesome!', 'Super duper!', 'Hooray! You are a star!'];
+/* ================= content =================
+   Words, pictures, coloring pages and the text of every spoken line live in content.js,
+   so the voice maker can record exactly what the games say. */
+const C = window.TULDOK_CONTENT;
+if (!C) throw new Error('content.js did not load');
+const T = C.T;
+const NUM = C.NUM, ALPHA = C.ALPHA, CUE = C.CUE, THINGS = C.THINGS, LINE_SET = C.LINE_SET, SHAPE_SET = C.SHAPE_SET;
+const PATTERNS = C.PATTERNS, PAT_BY_AGE = C.PAT_BY_AGE, PRAISE = C.PRAISE, WORDS = C.WORDS, GROUPS = C.GROUPS;
 
 function letterItems() {
   const out = [];
   ALPHA.forEach(function (L) {
     const cue = CUE[L], lo = L.toLowerCase();
-    out.push({ type: 'glyph', keys: [L], L: L, cue: cue, title: L, say: "Let's trace big letter " + L + '! ' + L + ' is for ' + cue[1] + '!' });
-    if (S.age !== 'nursery') out.push({ type: 'glyph', keys: [lo], L: L, cue: cue, title: lo, say: 'Now the small letter ' + L + '!' });
+    out.push({ type: 'glyph', keys: [L], L: L, cue: cue, title: L, say: T.traceBig(L) });
+    if (S.age !== 'nursery') out.push({ type: 'glyph', keys: [lo], L: L, cue: cue, title: lo, say: T.traceSmall(L) });
   });
   return out;
 }
 function numberItems() {
   const r = { nursery: [1, 5], prek: [1, 10], kinder: [0, 20] }[S.age], out = [];
-  for (let n = r[0]; n <= r[1]; n++) out.push({ type: 'glyph', keys: String(n).split(''), num: n, title: String(n), say: "Let's trace the number " + NUM[n] + '!' });
+  for (let n = r[0]; n <= r[1]; n++) out.push({ type: 'glyph', keys: String(n).split(''), num: n, title: String(n), say: T.traceNum(n) });
   return out;
 }
 function lineItems() {
@@ -461,18 +509,38 @@ function lineItems() {
 }
 function shapeItems() {
   const n = { nursery: 3, prek: 5, kinder: 8 }[S.age];
-  return SHAPE_SET.slice(0, n).map(function (s) { return { type: 'shape', kind: s, title: cap(s), say: "Let's trace " + (/^[aeiou]/.test(s) ? 'an ' : 'a ') + s + '!' }; });
+  return SHAPE_SET.slice(0, n).map(function (s) { return { type: 'shape', kind: s, title: cap(s), say: T.traceShape(s) }; });
 }
 
+/* Home screen sections, and every activity. ages = which age groups see it (default: all).
+   mode: trace (finger tracing), count, match, pattern, quiz (tap the answer; make() builds one question),
+   memory (flip cards), paint (coloring book). */
+const SECTIONS = [['trace', '✏️ Trace'], ['words', '🔤 Letters and words'], ['numbers', '🔢 Numbers'], ['colors', '🎨 Colors and shapes'], ['world', '🌏 My world'], ['think', '🧩 Think and play']];
 const ACTS = {
-  letters: { icon: 'Aa', name: 'Letters', color: '#ef476f', mode: 'trace', items: letterItems },
-  numbers: { icon: '123', name: 'Numbers', color: '#f78c1f', mode: 'trace', items: numberItems },
-  lines: { icon: '〰️', name: 'Lines', color: '#118ab2', mode: 'trace', items: lineItems },
-  shapes: { icon: '🔺', name: 'Shapes', color: '#8e5cd9', mode: 'trace', items: shapeItems },
-  count: { icon: '🍎', name: 'Count', color: '#06a77d', mode: 'count' },
-  match: { icon: '🧩', name: 'Match', color: '#e09f00', mode: 'match' },
-  pattern: { icon: '🔁', name: "What's next?", color: '#2a9d8f', mode: 'pattern' },
+  letters: { sec: 'trace', icon: 'Aa', name: 'Letters', color: '#ef476f', mode: 'trace', items: letterItems },
+  numbers: { sec: 'trace', icon: '123', name: 'Numbers', color: '#f78c1f', mode: 'trace', items: numberItems },
+  lines: { sec: 'trace', icon: '〰️', name: 'Lines', color: '#118ab2', mode: 'trace', items: lineItems },
+  shapes: { sec: 'trace', icon: '🔺', name: 'Shapes', color: '#8e5cd9', mode: 'trace', items: shapeItems },
+  findLetter: { sec: 'words', icon: '🔤', name: 'Find the letter', color: '#ef476f', mode: 'quiz', make: makeFindLetter },
+  firstSound: { sec: 'words', icon: 'B🐝', name: 'First sounds', color: '#e09f00', mode: 'quiz', make: makeFirstSound, ages: ['prek', 'kinder'] },
+  rhyme: { sec: 'words', icon: '🐱🎩', name: 'Rhymes', color: '#8e5cd9', mode: 'quiz', make: makeRhyme, ages: ['prek', 'kinder'] },
+  readWord: { sec: 'words', icon: 'cat', name: 'First words', color: '#118ab2', mode: 'quiz', make: makeReadWord, ages: ['kinder'] },
+  count: { sec: 'numbers', icon: '🍎', name: 'Count', color: '#06a77d', mode: 'count' },
+  findNumber: { sec: 'numbers', icon: '🔢', name: 'Find the number', color: '#f78c1f', mode: 'quiz', make: makeFindNumber },
+  moreLess: { sec: 'numbers', icon: '⚖️', name: 'More or fewer', color: '#2a9d8f', mode: 'quiz', make: makeMoreLess },
+  addUp: { sec: 'numbers', icon: '➕', name: 'Add it up', color: '#ef476f', mode: 'quiz', make: makeAddUp, ages: ['prek', 'kinder'] },
+  colors: { sec: 'colors', icon: '🎈', name: 'Colors', color: '#e63946', mode: 'quiz', make: makeColor },
+  findShape: { sec: 'colors', icon: '🔷', name: 'Find the shape', color: '#1e6fd9', mode: 'quiz', make: makeShape },
+  coloring: { sec: 'colors', icon: '🖍️', name: 'Coloring', color: '#ff70a6', mode: 'paint' },
+  findIt: { sec: 'world', icon: '👂', name: 'Listen and find', color: '#06a77d', mode: 'quiz', make: makeFindIt },
+  animalSounds: { sec: 'world', icon: '🐮', name: 'Animal sounds', color: '#8b5a2b', mode: 'quiz', make: makeAnimalSound },
+  feelings: { sec: 'world', icon: '😊', name: 'Feelings', color: '#f78c1f', mode: 'quiz', make: makeFeeling },
+  match: { sec: 'think', icon: '🧩', name: 'Match', color: '#e09f00', mode: 'match' },
+  pattern: { sec: 'think', icon: '🔁', name: "What's next?", color: '#2a9d8f', mode: 'pattern' },
+  memory: { sec: 'think', icon: '🃏', name: 'Memory', color: '#5aa9e6', mode: 'memory', rounds: 2 },
+  oddOne: { sec: 'think', icon: '🤔', name: 'Odd one out', color: '#8e5cd9', mode: 'quiz', make: makeOddOne, ages: ['prek', 'kinder'] },
 };
+function visibleActs() { return Object.keys(ACTS).filter(function (k) { const a = ACTS[k]; return !a.ages || a.ages.indexOf(S.age) >= 0; }); }
 
 /* ================= path shapes for lines and shapes ================= */
 function lineStrokes(kind, x0, x1, cy, H) {
@@ -716,19 +784,20 @@ function loadTrace(i) {
   TR.idx = ((i % n) + n) % n;
   TR.item = TR.items[TR.idx];
   TR.cur = 0; TR.done = false; TR.demo = null; TR.strokes = [];
+  gameToken++;
   save('pos-' + curAct, TR.idx);
   hideWin();
   layoutTrace();
   $('playTitle').textContent = TR.item.title;
   say(TR.item.say);
   const mine = TR.item;
-  setTimeout(function () { if (TR.item === mine && !TR.done && TR.cur === 0 && TR.prog === 0 && !TR.tracing) startDemo(); }, 1400);
+  later(function () { if (TR.item === mine && !TR.done && TR.cur === 0 && TR.prog === 0 && !TR.tracing) startDemo(); }, 1400);
 }
 function startDemo() { if (!TR.done && TR.strokes.length) TR.demo = { i: TR.cur, t0: performance.now() }; }
 function hintStart() {
   const now = performance.now();
   TR.pulse = now;
-  if (now - TR.hintT > 3500) { TR.hintT = now; say('Start at the green dot!'); }
+  if (now - TR.hintT > 3500) { TR.hintT = now; say(T.hint); }
 }
 function completeStroke() {
   const st = TR.strokes[TR.cur];
@@ -740,8 +809,8 @@ function completeStroke() {
   TR.cur++;
   if (TR.cur >= TR.strokes.length) {
     TR.done = true;
-    setTimeout(function () { sfx.win(); praise(); burst(W / 2, H / 2, 70); award(curAct); }, 250);
-    setTimeout(showWin, 1100);
+    later(function () { sfx.win(); praise(); burst(W / 2, H / 2, 70); award(curAct); }, 250);
+    later(showWin, 1100);
   }
 }
 function traceXY(e) { const r = traceCv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
@@ -889,12 +958,6 @@ function renderDemo(ctx, now) {
 
 /* ================= counting game ================= */
 const CG = { n: 0, counted: 0, locked: false, done: false, thing: null };
-function plural(w) {
-  const special = { fish: 'fish', mango: 'mangoes', bus: 'buses' };
-  if (special[w]) return special[w];
-  if (/[^aeiou]y$/.test(w)) return w.slice(0, -1) + 'ies';
-  return w + 's';
-}
 function numberChoices(n, maxN) {
   const set = [n];
   let guard = 0;
@@ -921,8 +984,8 @@ function countRound() {
       b.dataset.n = String(CG.counted);
       b.classList.add('counted', 'pop');
       sfx.tick();
-      say(cap(NUM[CG.counted]) + '!');
-      if (CG.counted === CG.n) { CG.locked = true; setTimeout(askHowMany, 750); }
+      say(T.countN(CG.counted));
+      if (CG.counted === CG.n) { CG.locked = true; later(askHowMany, 750); }
     });
     grid.appendChild(b);
   }
@@ -936,7 +999,7 @@ function countRound() {
     grid.style.setProperty('--sz', sz + 'px');
   };
   GAME.fit();
-  GAME.say = function () { say("Let's count! Tap each " + CG.thing[1] + '!'); };
+  GAME.say = function () { say(T.tapEach(CG.thing[1])); };
   GAME.say();
 }
 function askHowMany() {
@@ -944,19 +1007,20 @@ function askHowMany() {
   if (!ch || !q) return;
   ch.textContent = '';
   q.textContent = 'How many?';
-  GAME.say = function () { say('How many ' + plural(CG.thing[1]) + ' did you count?'); };
+  GAME.say = function () { say(T.howMany(CG.thing[1])); };
   GAME.say();
   shuffle(numberChoices(CG.n, Math.max(5, CG.n + 2))).forEach(function (v) {
     const b = el('button', 'choice pop', String(v));
     b.type = 'button';
+    if (v === CG.n) b.dataset.ok = '1';
     b.addEventListener('click', function () {
       if (CG.done) return;
-      if (v === CG.n) { CG.done = true; b.classList.add('right'); sfx.good(); say('Yes! ' + cap(NUM[v]) + '!'); roundWon(); }
+      if (v === CG.n) { CG.done = true; b.classList.add('right'); sfx.good(); say(T.yesN(v)); roundWon(speechMs([T.yesN(v)])); }
       else {
         b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
         sfx.oops();
-        say("Oops! Let's count again!");
-        setTimeout(resetCount, 1100);
+        say(T.countAgain);
+        later(resetCount, 1100);
       }
     });
     ch.appendChild(b);
@@ -969,7 +1033,7 @@ function resetCount() {
   const ch = $('choices'), q = $('prompt');
   if (ch) ch.textContent = '';
   if (q) q.textContent = 'Tap each one and count!';
-  GAME.say = function () { say("Let's count! Tap each " + CG.thing[1] + '!'); };
+  GAME.say = function () { say(T.tapEach(CG.thing[1])); };
 }
 
 /* ================= matching game ================= */
@@ -993,7 +1057,7 @@ function matchRound() {
   if (kind === 'letters') keys = shuffle(ALPHA).slice(0, n);
   else if (kind === 'numbers') keys = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].slice(0, S.age === 'kinder' ? 10 : 6)).slice(0, n).map(String);
   else keys = shuffle(THINGS).slice(0, n).map(function (t) { return t[0]; });
-  const line = { pictures: 'Draw a line to the same picture!', letters: 'Match the big letter to the small letter!', numbers: 'Match the number to the dots!' }[kind];
+  const line = T.match[kind];
   const q = el('div', 'prompt', line);
   const board = el('div', 'match');
   const lefts = keys.map(function (k) { return makeCard(k, 'L', kind); });
@@ -1081,16 +1145,17 @@ function patternRound() {
   shuffle(opts).forEach(function (t) {
     const b = el('button', 'choice emoji', t[0]);
     b.type = 'button';
+    if (t === answer) b.dataset.ok = '1';
     b.addEventListener('click', function () {
       if (done) return;
       if (t === answer) {
         done = true;
         blank.textContent = t[0]; blank.classList.add('filled', 'pop'); b.classList.add('right');
-        sfx.good(); say('Yes! ' + cap(t[1]) + '!');
-        roundWon();
+        sfx.good(); say(T.yesWord(t[1]));
+        roundWon(speechMs([T.yesWord(t[1])]));
       } else {
         b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
-        sfx.oops(); say('Hmm, look again!');
+        sfx.oops(); say(T.lookAgain);
       }
     });
     ch.appendChild(b);
@@ -1098,25 +1163,384 @@ function patternRound() {
   dom.appendChild(q); dom.appendChild(row); dom.appendChild(ch);
   GAME.fit = function () { row.style.setProperty('--sz', Math.floor(Math.max(46, Math.min(130, (W - 40) / (shown + 1) - 14, H * 0.26))) + 'px'); };
   GAME.fit();
-  const names = seq.slice(0, shown).map(function (i) { return cap(things[i][1]) + '!'; });
-  GAME.say = function () { sayParts(names.concat(['What comes next?'])); };
+  const names = seq.slice(0, shown).map(function (i) { return T.word(things[i][1]); });
+  GAME.say = function () { sayParts(names.concat([T.next])); };
   GAME.say();
+}
+
+/* ================= quiz games: listen or look, then tap the right answer =================
+   Each quiz activity's make() returns one question:
+   { text, show (optional picture or word above the answers), say: [lines], options: [{ key, text or node, cls, label }],
+     answer: key, right: [lines said when correct], wide: true for two big answers side by side, most: biggest group size } */
+const QZ = { cur: null, done: false, misses: 0 };
+function pickN(arr, n, ok) { return shuffle(ok ? arr.filter(ok) : arr).slice(0, n); }
+function notIn(list) { return function (x) { return list.indexOf(x) < 0; }; }
+function pickNew(arr) {
+  let x = pick(arr);
+  for (let i = 0; i < 8 && arr.length > 1 && x === GAME.last; i++) x = pick(arr);
+  GAME.last = x;
+  return x;
+}
+function byAge(o) { return o[S.age]; }
+function poolOf(group) { return GROUPS[group].slice(0, byAge({ nursery: 10, prek: 16, kinder: 99 })); }
+function wordOpt(w) { return { key: w, text: WORDS[w] || '❓', cls: 'emoji', label: w }; }
+function textOpt(v, label) { return { key: String(v), text: String(v), cls: 'txt', label: label || String(v) }; }
+function svgNode(markup) { const d = document.createElement('div'); d.innerHTML = markup; return d.firstElementChild; }
+function groupEl(emoji, n) { const g = el('div', 'grp'); for (let i = 0; i < n; i++) g.appendChild(el('span', '', emoji)); return g; }
+/* Rough time for the voice to finish a line, so the next question doesn't cut it off. */
+function speechMs(parts) { let n = 0; parts.forEach(function (p) { n += String(p).length; }); return Math.min(4500, 400 + n * 58); }
+/* Columns and size that make n square buttons as big as possible in a w x h box. */
+function bestGrid(n, w, h, gap, maxSz) {
+  let best = { cols: n, sz: 0 };
+  for (let c = 1; c <= n; c++) {
+    const r = Math.ceil(n / c), s = Math.min((w - gap * (c - 1)) / c, (h - gap * (r - 1)) / r);
+    if (s > best.sz) best = { cols: c, sz: s };
+  }
+  best.sz = Math.floor(Math.max(56, Math.min(maxSz, best.sz)));
+  return best;
+}
+
+function quizRound() {
+  dom.textContent = '';
+  const q = ACTS[curAct].make();
+  QZ.cur = q; QZ.done = false; QZ.misses = 0;
+  if (q.text) dom.appendChild(el('div', 'qtext', q.text));
+  if (q.show) { q.show.classList.add('qshow'); dom.appendChild(q.show); }
+  const box = el('div', 'opts' + (q.wide ? ' wide' : ''));
+  q.options.forEach(function (o) {
+    const b = el('button', 'opt ' + (o.cls || 'emoji'));
+    b.type = 'button';
+    if (o.node) b.appendChild(o.node); else b.textContent = o.text;
+    b.setAttribute('aria-label', o.label || o.key);
+    b.dataset.key = o.key;
+    if (o.key === q.answer) b.dataset.ok = '1';
+    b.addEventListener('click', function () { quizPick(b); });
+    box.appendChild(b);
+  });
+  dom.appendChild(box);
+  GAME.fit = function () { fitQuiz(box, q); };
+  GAME.fit();
+  GAME.say = function () { sayParts(q.say); };
+  GAME.say();
+}
+function quizPick(b) {
+  const q = QZ.cur;
+  if (!q || QZ.done) return;
+  if (b.dataset.ok === '1') {
+    QZ.done = true;
+    b.classList.add('right', 'pop');
+    sfx.good();
+    sayParts(q.right);
+    roundWon(speechMs(q.right));
+    return;
+  }
+  b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake', 'miss');
+  sfx.oops();
+  QZ.misses++;
+  /* Errorless learning: after two misses the right answer glows. */
+  if (QZ.misses >= 2) { const r = dom.querySelector('.opt[data-ok="1"]'); if (r) r.classList.add('hint'); }
+  sayParts([pick(C.TRY)].concat(q.say));
+}
+function fitQuiz(box, q) {
+  let used = 44;
+  dom.querySelectorAll('.qtext, .qshow').forEach(function (e) { used += e.getBoundingClientRect().height + 22; });
+  const availH = Math.max(120, H - used - 30), availW = Math.max(200, W - 40);
+  if (q.wide) {
+    const wz = Math.floor(Math.min(460, (availW - 30) / 2)), sz = Math.floor(Math.max(130, Math.min(340, availH)));
+    const most = q.most || 10, per = Math.max(2, Math.ceil(Math.sqrt(most * wz / sz)));
+    const gz = Math.floor(Math.min(wz / (per + 0.5), sz / (Math.ceil(most / per) + 0.5)) * 0.8);
+    box.style.setProperty('--sz', sz + 'px');
+    box.style.setProperty('--wz', wz + 'px');
+    box.style.setProperty('--gz', Math.max(16, gz) + 'px');
+    return;
+  }
+  const g = bestGrid(q.options.length, availW, availH, 22, 200);
+  box.style.setProperty('--cols', String(g.cols));
+  box.style.setProperty('--sz', g.sz + 'px');
+}
+
+/* ----- letters and words ----- */
+function makeFindLetter() {
+  const small = S.age === 'kinder' && Math.random() < 0.5, L = pickNew(ALPHA);
+  const opts = shuffle([L].concat(pickN(ALPHA, byAge({ nursery: 2, prek: 3, kinder: 3 }), notIn([L]))));
+  return {
+    text: small ? 'Find the small letter!' : 'Find the letter!',
+    say: [small ? T.findSmall(L) : T.findLetter(L)],
+    options: opts.map(function (x) { return { key: x, text: small ? x.toLowerCase() : x, cls: 'txt', label: x }; }),
+    answer: L, right: [T.isFor(L), pick(C.FOUND)]
+  };
+}
+/* C, K and Q make the same first sound, so they never trick each other. */
+function soundGroup(letter) { return 'CKQ'.indexOf(letter) >= 0 ? 'K' : letter; }
+function makeFirstSound() {
+  const L = pickNew(Object.keys(C.FIRST)), w = pick(C.FIRST[L]);
+  const others = pickN(C.FIRST_WORDS, byAge({ nursery: 2, prek: 2, kinder: 3 }), function (x) { return soundGroup(x.charAt(0).toUpperCase()) !== soundGroup(L); });
+  return {
+    text: 'Which one starts with ' + L + '?', show: el('div', 'qcard txt', L + L.toLowerCase()),
+    say: [T.startsQ(L)], options: shuffle([w].concat(others)).map(wordOpt), answer: w,
+    right: [T.starts(w, L), pick(C.FOUND)]
+  };
+}
+function makeRhyme() {
+  const pr = pickNew(C.RHYMES), a = pr[0], b = pr[1];
+  const others = pickN(C.RHYMES.filter(function (p) { return p !== pr; }).map(function (p) { return p[1]; }), byAge({ nursery: 2, prek: 2, kinder: 3 }));
+  return {
+    text: 'What rhymes with ' + a + '?', show: el('div', 'qcard', WORDS[a]),
+    say: [T.rhymeQ(a)], options: shuffle([b].concat(others)).map(wordOpt), answer: b,
+    right: [T.rhymeYes(a, b)]
+  };
+}
+function makeReadWord() {
+  const w = pickNew(C.READ), others = pickN(C.READ, 2, notIn([w]));
+  return {
+    text: 'Read the word!', show: el('div', 'qword', w),
+    say: [T.readQ], options: shuffle([w].concat(others)).map(wordOpt), answer: w,
+    right: [T.word(w), T.readYes]
+  };
+}
+
+/* ----- numbers ----- */
+function makeFindNumber() {
+  const r = byAge({ nursery: [1, 5], prek: [1, 10], kinder: [0, 20] }), range = [];
+  for (let i = r[0]; i <= r[1]; i++) range.push(i);
+  const v = pickNew(range), others = pickN(range, byAge({ nursery: 2, prek: 3, kinder: 3 }), notIn([v]));
+  return {
+    text: 'Find the number!', say: [T.findNum(v)],
+    options: shuffle([v].concat(others)).map(function (x) { return textOpt(x, NUM[x]); }), answer: String(v),
+    right: [T.countN(v), pick(C.FOUND)]
+  };
+}
+function makeMoreLess() {
+  const fewer = S.age === 'kinder' && Math.random() < 0.5;
+  const c = byAge({ nursery: [1, 5, 3], prek: [1, 8, 2], kinder: [1, 10, 1] });
+  let a = 1, b = 1 + c[2], guard = 0;
+  do { a = rInt(c[0], c[1]); b = rInt(c[0], c[1]); } while (Math.abs(a - b) < c[2] && ++guard < 60);
+  if (Math.abs(a - b) < c[2]) { a = c[0]; b = c[0] + c[2]; }
+  const t = pick(THINGS), leftWins = fewer ? a < b : a > b;
+  return {
+    text: fewer ? 'Which side has fewer?' : 'Which side has more?', say: [fewer ? T.fewerQ : T.moreQ],
+    options: [{ key: 'L', node: groupEl(t[0], a), cls: 'grp-btn', label: a + ' ' + t[1] }, { key: 'R', node: groupEl(t[0], b), cls: 'grp-btn', label: b + ' ' + t[1] }],
+    answer: leftWins ? 'L' : 'R', right: [fewer ? T.fewerYes : T.moreYes], wide: true, most: Math.max(a, b)
+  };
+}
+function makeAddUp() {
+  const max = S.age === 'kinder' ? 10 : 5, a = rInt(1, max - 1), b = rInt(1, max - a), s = a + b, t = pick(THINGS);
+  const show = el('div', 'eq');
+  show.appendChild(groupEl(t[0], a)); show.appendChild(el('span', 'op', '+')); show.appendChild(groupEl(t[0], b));
+  return {
+    text: S.age === 'kinder' ? a + ' + ' + b + ' = ?' : 'How many in all?', show: show,
+    say: [T.addQ], options: shuffle(numberChoices(s, max + 2)).map(function (x) { return textOpt(x, NUM[x]); }), answer: String(s),
+    right: [T.yesN(s)]
+  };
+}
+
+/* ----- colors and shapes ----- */
+function balloonSvg(fill) {
+  return '<svg viewBox="0 0 100 124" aria-hidden="true">' +
+    '<path d="M50 100 C44 108 56 114 50 122" fill="none" stroke="#8a9aa6" stroke-width="2.5"/>' +
+    '<path d="M44 91 H56 L50 100 Z" fill="' + fill + '" stroke="rgba(0,0,0,.35)" stroke-width="2"/>' +
+    '<ellipse cx="50" cy="48" rx="36" ry="44" fill="' + fill + '" stroke="rgba(0,0,0,.35)" stroke-width="2.5"/>' +
+    '<ellipse cx="37" cy="32" rx="8" ry="13" fill="#fff" opacity=".45"/></svg>';
+}
+function makeColor() {
+  const pool = C.COLORS.slice(0, byAge({ nursery: 4, prek: 8, kinder: 10 }));
+  const c = pickNew(pool), others = pickN(pool, byAge({ nursery: 2, prek: 3, kinder: 3 }), notIn([c]));
+  return {
+    text: 'Find the color!', say: [T.colorQ(c[0])],
+    options: shuffle([c].concat(others)).map(function (x) { return { key: x[0], node: svgNode(balloonSvg(x[1])), cls: 'svg', label: x[0] }; }),
+    answer: c[0], right: [T.word(c[0]), pick(C.FOUND)]
+  };
+}
+function shapeSvg(kind, fill) {
+  const st = ' fill="' + fill + '" stroke="rgba(0,0,0,.3)" stroke-width="3" stroke-linejoin="round"';
+  let body;
+  if (kind === 'circle') body = '<circle cx="50" cy="50" r="42"' + st + '/>';
+  else if (kind === 'square') body = '<rect x="12" y="12" width="76" height="76" rx="3"' + st + '/>';
+  else if (kind === 'rectangle') body = '<rect x="3" y="26" width="94" height="48" rx="3"' + st + '/>';
+  else if (kind === 'triangle') body = '<polygon points="50,7 95,90 5,90"' + st + '/>';
+  else if (kind === 'oval') body = '<ellipse cx="50" cy="50" rx="29" ry="45"' + st + '/>';
+  else if (kind === 'diamond') body = '<polygon points="50,3 86,50 50,97 14,50"' + st + '/>';
+  else if (kind === 'heart') body = '<path d="M50 90 C22 70 4 52 4 32 C4 16 16 6 30 6 C40 6 46 12 50 20 C54 12 60 6 70 6 C84 6 96 16 96 32 C96 52 78 70 50 90 Z"' + st + '/>';
+  else {
+    const p = starPoly(50, 54, 47, 20), pts = [];
+    for (let i = 0; i + 1 < p.length; i += 2) pts.push(p[i].toFixed(1) + ',' + p[i + 1].toFixed(1));
+    body = '<polygon points="' + pts.join(' ') + '"' + st + '/>';
+  }
+  return '<svg viewBox="0 0 100 100" aria-hidden="true">' + body + '</svg>';
+}
+function makeShape() {
+  const pool = byAge(C.SHAPE_AGE), s = pickNew(pool), others = pickN(pool, byAge({ nursery: 2, prek: 3, kinder: 3 }), notIn([s]));
+  const cols = shuffle(CRAYON);
+  return {
+    text: 'Find the shape!', say: [T.shapeQ(s)],
+    options: shuffle([s].concat(others)).map(function (k, i) { return { key: k, node: svgNode(shapeSvg(k, cols[i % cols.length])), cls: 'svg', label: k }; }),
+    answer: s, right: [T.word(s), pick(C.FOUND)]
+  };
+}
+
+/* ----- my world ----- */
+function makeFindIt() {
+  const pool = poolOf(pick(byAge(C.FIND_BY_AGE)));
+  const w = pickNew(pool), others = pickN(pool, byAge({ nursery: 2, prek: 3, kinder: 5 }), notIn([w]));
+  return {
+    text: 'Listen! Where is it?', say: [T.whereQ(w)],
+    options: shuffle([w].concat(others)).map(wordOpt), answer: w, right: [T.word(w), pick(C.FOUND)]
+  };
+}
+function makeAnimalSound() {
+  const pool = C.SOUNDS.slice(0, byAge({ nursery: 6, prek: 10, kinder: 99 }));
+  const s = pickNew(pool), others = pickN(pool, byAge({ nursery: 2, prek: 2, kinder: 3 }), notIn([s]));
+  return {
+    text: 'Who says "' + s[1] + '"?', say: [T.soundQ(s[1])],
+    options: shuffle([s].concat(others)).map(function (x) { return wordOpt(x[0]); }), answer: s[0],
+    right: [T.soundYes(s[0], s[1])]
+  };
+}
+function makeFeeling() {
+  const pool = C.FEELINGS.slice(0, byAge({ nursery: 3, prek: 5, kinder: 6 }));
+  const f = pickNew(pool), others = pickN(pool, byAge({ nursery: 2, prek: 3, kinder: 3 }), notIn([f]));
+  return {
+    text: 'Find the ' + f[0] + ' face!', say: [T.feelQ(f[0])],
+    options: shuffle([f].concat(others)).map(function (x) { return { key: x[0], text: x[1], cls: 'emoji', label: x[0] }; }),
+    answer: f[0], right: [T.word(f[0]), pick(C.FOUND)]
+  };
+}
+
+/* ----- think ----- */
+function makeOddOne() {
+  const cats = Object.keys(C.ODD), main = pick(cats), other = pick(cats.filter(notIn([main])));
+  const same = pickN(poolOf(main), byAge({ nursery: 2, prek: 2, kinder: 3 })), odd = pick(poolOf(other));
+  return {
+    text: 'Which one does not belong?', say: [T.oddQ],
+    options: shuffle(same.concat([odd])).map(wordOpt), answer: odd, right: [T.word(odd), C.ODD[main]]
+  };
+}
+
+/* ================= memory: flip two cards, find the pairs ================= */
+const MEM = { open: null, lock: false, left: 0 };
+function memoryRound() {
+  dom.textContent = '';
+  const words = pickN(poolOf(pick(byAge(C.MEMORY_BY_AGE))), byAge({ nursery: 3, prek: 4, kinder: 6 }));
+  const deck = shuffle(words.concat(words));
+  MEM.open = null; MEM.lock = false; MEM.left = words.length;
+  const grid = el('div', 'mem');
+  deck.forEach(function (w) {
+    const c = el('button', 'mcard');
+    c.type = 'button';
+    c.dataset.key = w;
+    c.setAttribute('aria-label', 'card');
+    c.appendChild(el('span', 'back', '⭐'));
+    c.appendChild(el('span', 'face', WORDS[w]));
+    c.addEventListener('click', function () { memFlip(c); });
+    grid.appendChild(c);
+  });
+  dom.appendChild(el('div', 'qtext', 'Find the pairs!'));
+  dom.appendChild(grid);
+  GAME.fit = function () {
+    const g = bestGrid(deck.length, Math.max(200, W - 40), Math.max(150, H - 110), 14, 170);
+    grid.style.setProperty('--cols', String(g.cols));
+    grid.style.setProperty('--sz', g.sz + 'px');
+  };
+  GAME.fit();
+  GAME.say = function () { say(T.memQ); };
+  GAME.say();
+}
+function memFlip(c) {
+  if (MEM.lock || c.classList.contains('up') || c.classList.contains('done')) return;
+  c.classList.add('up');
+  sfx.tick();
+  say(T.word(c.dataset.key));
+  const a = MEM.open;
+  if (!a) { MEM.open = c; return; }
+  MEM.open = null;
+  if (a.dataset.key === c.dataset.key) {
+    a.classList.add('done'); c.classList.add('done');
+    sfx.good();
+    const r = c.getBoundingClientRect(), sr = stage.getBoundingClientRect();
+    burst(r.left + r.width / 2 - sr.left, r.top + r.height / 2 - sr.top, 14);
+    MEM.left--;
+    if (MEM.left <= 0) roundWon(900);
+  } else {
+    MEM.lock = true;
+    later(function () { a.classList.remove('up'); c.classList.remove('up'); MEM.lock = false; }, 1100);
+  }
+}
+
+/* ================= coloring book: pick a crayon, tap an area ================= */
+const PAINT = ['#e63946', '#ff8c1a', '#ffd23f', '#8fd14f', '#2bb24c', '#5bc0eb', '#1e6fd9', '#8e5cd9', '#ff70a6', '#8b5a2b', '#222222', '#ffffff'];
+const PT = { idx: 0, color: PAINT[0], finished: false };
+function loadPage(i) {
+  const pages = C.PAGES, n = pages.length;
+  gameToken++;
+  PT.idx = ((i % n) + n) % n;
+  PT.finished = false;
+  save('pos-' + curAct, PT.idx);
+  hideWin();
+  dom.textContent = '';
+  const pg = pages[PT.idx];
+  $('playTitle').textContent = pg.title;
+  const wrap = el('div', 'paint'), holder = el('div', 'page');
+  holder.innerHTML = pg.svg;
+  const svg = holder.firstElementChild;
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  svg.querySelectorAll('.r').forEach(function (r) { r.setAttribute('fill', '#ffffff'); });
+  svg.addEventListener('click', function (e) {
+    const r = e.target && e.target.closest ? e.target.closest('.r') : null;
+    if (!r) return;
+    r.setAttribute('fill', PT.color);
+    sfx.tick();
+  });
+  const side = el('div', 'palette');
+  PAINT.forEach(function (col) {
+    const b = el('button', 'swatch' + (col === PT.color ? ' on' : ''));
+    b.type = 'button';
+    b.style.background = col;
+    b.setAttribute('aria-label', 'crayon');
+    b.addEventListener('click', function () {
+      PT.color = col;
+      sfx.tick();
+      side.querySelectorAll('.swatch').forEach(function (x) { x.classList.toggle('on', x === b); });
+    });
+    side.appendChild(b);
+  });
+  const done = el('button', 'paint-done', '✔');
+  done.type = 'button';
+  done.setAttribute('aria-label', 'Finished');
+  done.addEventListener('click', paintDone);
+  side.appendChild(done);
+  wrap.appendChild(holder);
+  wrap.appendChild(side);
+  dom.appendChild(wrap);
+  GAME.say = function () { say(T.paintQ); };
+  GAME.say();
+}
+function paintDone() {
+  if (PT.finished) return;
+  PT.finished = true;
+  sfx.win();
+  lastPraise = T.paintDone;
+  say(T.paintDone);
+  burst(W / 2, H / 2, 70);
+  award(curAct);
+  later(showWin, 1200);
 }
 
 /* ================= game flow ================= */
 let mode = null, curAct = null, rafId = 0, lastPraise = PRAISE[0];
-const GAME = { round: 0, total: 5, fit: null, say: null };
+const GAME = { round: 0, total: 5, fit: null, say: null, last: null };
 function praise() { lastPraise = pick(PRAISE); say(lastPraise); }
-function award(key) { stars[key] = (stars[key] || 0) + 1; save('stars', stars); updateStars(); }
+function award(key) { if (!key) return; stars[key] = (stars[key] || 0) + 1; save('stars', stars); updateStars(); }
 function updateStars() { $('starCount').textContent = '⭐ ' + (stars[curAct] || 0); }
 function showWin() { $('winText').textContent = lastPraise; $('win').hidden = false; }
 function hideWin() { $('win').hidden = true; }
-function roundWon() {
+/* talkMs: how long the "right answer" line takes, so the next question waits for it. */
+function roundWon(talkMs) {
+  const talk = talkMs || 0;
   burst(W / 2, H * 0.45, 30);
   GAME.round++;
   if (GAME.round >= GAME.total) {
-    setTimeout(function () { sfx.win(); praise(); burst(W / 2, H / 2, 70); award(curAct); showWin(); }, 800);
-  } else setTimeout(nextRound, 1500);
+    later(function () { sfx.win(); praise(); burst(W / 2, H / 2, 70); award(curAct); showWin(); }, Math.max(800, talk));
+  } else later(nextRound, Math.max(1500, talk));
 }
 function nextRound() {
   if (!curAct) return;
@@ -1125,27 +1549,35 @@ function nextRound() {
   if (mode === 'count') countRound();
   else if (mode === 'match') matchRound();
   else if (mode === 'pattern') patternRound();
+  else if (mode === 'quiz') quizRound();
+  else if (mode === 'memory') memoryRound();
 }
+function restartGame() { gameToken++; GAME.round = 0; nextRound(); }
 function showScreen(id) { ['home', 'play'].forEach(function (s) { $(s).classList.toggle('on', s === id); }); }
 function startAct(key) {
   const a = ACTS[key];
+  if (!a) return;
   curAct = key; mode = a.mode;
+  gameToken++;
   showScreen('play');
   sizeCanvases();
-  const trace = mode === 'trace';
+  const trace = mode === 'trace', paged = trace || mode === 'paint';
   traceCv.hidden = !trace; dom.hidden = trace;
-  $('prevBtn').hidden = !trace; $('nextBtn').hidden = !trace; $('showBtn').hidden = !trace;
+  $('prevBtn').hidden = !paged; $('nextBtn').hidden = !paged; $('showBtn').hidden = !trace;
   dom.textContent = '';
-  GAME.fit = null; GAME.say = null;
+  dom.classList.toggle('full', mode === 'paint');
+  GAME.fit = null; GAME.say = null; GAME.last = null;
   confetti.length = 0;
   updateStars();
   if (trace) { TR.items = a.items(); loadTrace(load('pos-' + key, 0)); }
-  else { GAME.round = 0; nextRound(); }
+  else if (mode === 'paint') loadPage(load('pos-' + key, 0));
+  else { GAME.round = 0; GAME.total = a.rounds || 5; nextRound(); }
   if (!rafId) rafId = requestAnimationFrame(frame);
 }
 function goHome() {
   if (rafId) cancelAnimationFrame(rafId);
   rafId = 0; mode = null; curAct = null;
+  gameToken++;
   stopVoice(); hideWin();
   dom.textContent = '';
   TR.item = null;
@@ -1162,12 +1594,14 @@ function frame(now) {
   } catch (err) { cancelAnimationFrame(rafId); rafId = 0; showError(err.message || String(err)); }
 }
 $('homeBtn').addEventListener('click', goHome);
-$('prevBtn').addEventListener('click', function () { if (mode === 'trace') loadTrace(TR.idx - 1); });
-$('nextBtn').addEventListener('click', function () { if (mode === 'trace') loadTrace(TR.idx + 1); });
+$('prevBtn').addEventListener('click', function () { if (mode === 'trace') loadTrace(TR.idx - 1); else if (mode === 'paint') loadPage(PT.idx - 1); });
+$('nextBtn').addEventListener('click', function () { if (mode === 'trace') loadTrace(TR.idx + 1); else if (mode === 'paint') loadPage(PT.idx + 1); });
 $('showBtn').addEventListener('click', function () { if (mode === 'trace') startDemo(); });
 $('sayBtn').addEventListener('click', function () { if (mode === 'trace' && TR.item) say(TR.item.say); else if (GAME.say) GAME.say(); });
-$('goBtn').addEventListener('click', function () { if (mode === 'trace') loadTrace(TR.idx + 1); else { GAME.round = 0; nextRound(); } });
-$('againBtn').addEventListener('click', function () { if (mode === 'trace') loadTrace(TR.idx); else { GAME.round = 0; nextRound(); } });
+$('goBtn').addEventListener('click', function () { if (mode === 'trace') loadTrace(TR.idx + 1); else if (mode === 'paint') loadPage(PT.idx + 1); else restartGame(); });
+$('againBtn').addEventListener('click', function () { if (mode === 'trace') loadTrace(TR.idx); else if (mode === 'paint') loadPage(PT.idx); else restartGame(); });
+/* Coloring: tap outside the "well done" box to keep painting. */
+$('win').addEventListener('click', function (e) { if (e.target === $('win') && mode === 'paint') hideWin(); });
 window.addEventListener('resize', function () {
   if (!$('play').classList.contains('on')) return;
   sizeCanvases();
@@ -1177,18 +1611,37 @@ window.addEventListener('resize', function () {
 
 /* ================= home and grown-ups ================= */
 function buildTiles() {
-  const box = $('tiles');
+  const box = $('tiles'), shown = visibleActs();
   box.textContent = '';
-  Object.keys(ACTS).forEach(function (k) {
-    const a = ACTS[k], b = el('button', 'tile');
-    b.type = 'button';
-    b.style.setProperty('--c', a.color);
-    b.appendChild(el('div', 'ic', a.icon));
-    b.appendChild(el('div', 'nm', a.name));
-    b.appendChild(el('div', 'st', '⭐ ' + (stars[k] || 0)));
-    b.addEventListener('click', function () { sfx.tick(); startAct(k); });
-    box.appendChild(b);
+  SECTIONS.forEach(function (sec) {
+    const keys = shown.filter(function (k) { return ACTS[k].sec === sec[0]; });
+    if (!keys.length) return;
+    box.appendChild(el('h2', 'sec-h', sec[1]));
+    const grid = el('div', 'grid');
+    keys.forEach(function (k) {
+      const a = ACTS[k], b = el('button', 'tile');
+      b.type = 'button';
+      b.style.setProperty('--c', a.color);
+      b.appendChild(el('div', 'ic', a.icon));
+      b.appendChild(el('div', 'nm', a.name));
+      b.appendChild(el('div', 'st', '⭐ ' + (stars[k] || 0)));
+      b.addEventListener('click', function () { sfx.tick(); startAct(k); });
+      grid.appendChild(b);
+    });
+    box.appendChild(grid);
   });
+}
+function progressText() {
+  const done = visibleActs().filter(function (k) { return stars[k]; }).map(function (k) { return ACTS[k].name + ' ⭐' + stars[k]; });
+  return done.length ? 'Stars so far: ' + done.join(' · ') : 'No stars yet. Every finished game earns a star.';
+}
+function voiceText() {
+  const all = C.lines();
+  if (!CLIPS) return all.length + ' spoken lines, no voice clips yet (the tablet voice reads them)';
+  let have = 0;
+  all.forEach(function (l) { if (CLIPS[vkey(l)]) have++; });
+  if (have >= all.length) return 'voice clips for all ' + all.length + ' spoken lines';
+  return 'voice clips for ' + have + ' of ' + all.length + ' spoken lines (run the Colab voice maker for the rest; the tablet voice reads them meanwhile)';
 }
 function seg(id, items, get, set) {
   const box = $(id);
@@ -1205,15 +1658,13 @@ function openGrown() {
   seg('setAge', [['nursery', 'Nursery · 3'], ['prek', 'Pre-K · 4'], ['kinder', 'Kinder · 5']], function () { return S.age; }, function (v) { S.age = v; save('age', v); });
   seg('setSound', [[true, 'On'], [false, 'Off']], function () { return S.sound; }, function (v) { S.sound = v; save('sound', v); });
   seg('setVoice', [[true, 'On'], [false, 'Off']], function () { return S.voice; }, function (v) { S.voice = v; save('voice', v); if (!v) stopVoice(); });
-  seg('setVoiceStyle', [['jolly', 'Happy teacher'], ['calm', 'Calm (tablet voice)']], function () { return S.voiceStyle; }, function (v) { S.voiceStyle = v; save('voiceStyle', v); say("Hi there! Let's play!"); });
+  seg('setVoiceStyle', [['jolly', 'Happy teacher'], ['calm', 'Calm (tablet voice)']], function () { return S.voiceStyle; }, function (v) { S.voiceStyle = v; save('voiceStyle', v); say(T.hi); });
   $('resetStars').textContent = 'Reset stars';
   const A = window.TuldokAndroid;
   let ver = 'web preview';
   try { if (A && typeof A.version === 'function') ver = 'app version ' + A.version(); } catch (e) { /* ignore */ }
-  const nClips = CLIPS ? Object.keys(CLIPS).length : 0;
-  let vInfo = nClips ? ' · ' + nClips + ' voice clips' : ' · no voice clips yet (tablet voice)';
-  if (missingClips.length) vInfo += ' · ' + missingClips.length + ' lines without a clip: ' + missingClips.slice(0, 3).join(' / ');
-  $('version').textContent = 'Tuldok ' + ver + vInfo;
+  $('progress').textContent = progressText();
+  $('version').textContent = 'Tuldok ' + ver + ' · ' + voiceText();
   $('grown').hidden = false;
 }
 function closeGrown() { $('grown').hidden = true; buildTiles(); }
@@ -1240,6 +1691,67 @@ window.__tuldokBack = function () {
   if (!$('grown').hidden) { closeGrown(); return true; }
   if ($('play').classList.contains('on')) { goHome(); return true; }
   return false;
+};
+
+/* ================= test hooks =================
+   Used by the GitHub build's smoke test (tools/smoke.mjs), which plays every game in Chrome before the APK is published.
+   poke() taps something at random; solve() plays the right moves. Neither is used by children. */
+function clickEl(x) { if (x) x.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })); }
+window.__tuldok = {
+  lines: function () { return C.lines(); },
+  setAge: function (a) { S.age = a; buildTiles(); return visibleActs(); },
+  open: function (k) { startAct(k); return mode; },
+  home: function () { goHome(); },
+  /* lines the games said that are missing from content.js lines() (they would have no voice clip) */
+  unlisted: function () {
+    const known = {}, out = [];
+    C.lines().forEach(function (l) { known[vkey(l)] = 1; });
+    (window.__tuldokTestLog || []).forEach(function (l) { if (!known[vkey(l)] && out.indexOf(l) < 0) out.push(l); });
+    return out;
+  },
+  poke: function () {
+    if (mode === 'trace') { if (!TR.done) completeStroke(); return mode; }
+    if (mode === 'match') {
+      const ls = dom.querySelectorAll('.card[data-side="L"]:not(.done)'), rs = dom.querySelectorAll('.card[data-side="R"]:not(.done)');
+      if (ls.length && rs.length) tryMatch(pick(Array.prototype.slice.call(ls)), pick(Array.prototype.slice.call(rs)));
+      return mode;
+    }
+    const els = dom.querySelectorAll('button.opt, button.choice, button.thing, button.mcard, button.swatch, .page .r');
+    if (els.length) clickEl(els[Math.floor(Math.random() * els.length)]);
+    return mode;
+  },
+  solve: function () {
+    return new Promise(function (resolve) {
+      if (mode === 'trace') { let g = 0; while (!TR.done && TR.strokes.length && g++ < 60) completeStroke(); resolve(mode); return; }
+      if (mode === 'quiz' || mode === 'pattern') { clickEl(dom.querySelector('[data-ok="1"]')); resolve(mode); return; }
+      if (mode === 'count') {
+        dom.querySelectorAll('.thing:not(.counted)').forEach(clickEl);
+        setTimeout(function () { clickEl(dom.querySelector('.choice[data-ok="1"]')); resolve(mode); }, window.__tuldokFast ? 150 : 900);
+        return;
+      }
+      if (mode === 'match') {
+        dom.querySelectorAll('.card[data-side="L"]:not(.done)').forEach(function (a) {
+          tryMatch(a, dom.querySelector('.card[data-side="R"][data-key="' + a.dataset.key + '"]'));
+        });
+        resolve(mode); return;
+      }
+      if (mode === 'memory') {
+        MEM.lock = false; MEM.open = null;
+        dom.querySelectorAll('.mcard.up:not(.done)').forEach(function (c) { c.classList.remove('up'); });
+        const byKey = {};
+        dom.querySelectorAll('.mcard:not(.done)').forEach(function (c) { (byKey[c.dataset.key] = byKey[c.dataset.key] || []).push(c); });
+        Object.keys(byKey).forEach(function (k) { clickEl(byKey[k][0]); clickEl(byKey[k][1]); });
+        resolve(mode); return;
+      }
+      if (mode === 'paint') {
+        clickEl(dom.querySelector('.swatch'));
+        dom.querySelectorAll('.page .r').forEach(clickEl);
+        clickEl(dom.querySelector('.paint-done'));
+        resolve(mode); return;
+      }
+      resolve(mode);
+    });
+  }
 };
 
 buildTiles();

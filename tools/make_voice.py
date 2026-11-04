@@ -22,13 +22,15 @@ Options:
   --kvoice af_heart   Kokoro voice name
 
   --out DIR           where clips are kept (default /content/tuldok-voice; the notebook can use Google Drive)
+  --lines FILE|URL    the line list (default: voice-lines.json from the newest GitHub build)
 
 Running it again continues where it stopped (finished clips are kept).
 Output: DIR.zip (default /content/tuldok-voice.zip) holding voice/*.mp3 and voice/manifest.js.
 Unzip it into app/src/main/assets/ of the tuldok repo.
 
-The line list below must match what assets/index.html says. A line without a clip
-falls back to the tablet voice, and the grown-ups menu shows how many lines lack a clip.
+The list of lines comes from the newest GitHub build (voice-lines.json, made from content.js),
+so after adding words or games: push, wait for the build, and run this again; only new lines are recorded.
+A line without a clip falls back to the tablet voice; the grown-ups menu shows how many lines have clips.
 """
 import argparse, contextlib, datetime, hashlib, io, json, os, random, re, subprocess, time, zipfile
 
@@ -46,63 +48,38 @@ ap.add_argument('--only', default='')
 ap.add_argument('--fix', action='append', default=[])
 ap.add_argument('--seed', type=int, default=7)
 ap.add_argument('--out', default='/content/tuldok-voice')
+ap.add_argument('--lines', default='')
 args, _ = ap.parse_known_args()
 
-# ---------------- every line the app says (keep in step with assets/index.html) ----------------
-NUM = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve',
-       'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty']
-ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-CUE = dict(A='apple', B='ball', C='cat', D='dog', E='egg', F='fish', G='grapes', H='house', I='ice cream',
-           J='juice', K='kite', L='lion', M='moon', N='nose', O='octopus', P='pig', Q='queen', R='rainbow',
-           S='sun', T='tree', U='umbrella', V='violin', W='watermelon', X='box', Y='yo-yo', Z='zebra')
-THINGS = ['apple', 'star', 'fish', 'flower', 'car', 'balloon', 'cat', 'dog', 'butterfly', 'mango', 'banana',
-          'ball', 'bee', 'moon', 'frog', 'duck', 'watermelon', 'turtle', 'strawberry', 'bus']
-LINE_SAYS = ['Help the bee fly to the flower!', 'Make rain! Draw from the top down!',
-             'Draw round circles, like a ball!', 'Draw a line down, then a line across!',
-             'Draw slanting lines, like a kite string!', 'Help the frog hop to the leaf!',
-             'Swim like a fish to the shell!', 'Hop like a bunny to the carrot!', 'Loop all the way to the flower!']
-SHAPES = ['circle', 'square', 'triangle', 'rectangle', 'star', 'oval', 'heart', 'diamond']
-PRAISE = ['Yay! Great job!', 'Woohoo! You did it!', 'Wow! Awesome!', 'Super duper!', 'Hooray! You are a star!']
+# ---------------- every line the app says ----------------
+# The GitHub build exports it from app/src/main/assets/content.js and publishes it next to the APK,
+# so this script always records exactly what the newest app says.
+LINES_URL = 'https://github.com/akosidave31/tuldok/releases/download/latest-build/voice-lines.json'
 SAMPLE = ["Hi there! Let's play!", "Let's trace big letter A! A is for apple!", 'Yay! Great job!',
           'How many butterflies did you count?', 'Three!', "Oops! Let's count again!"]
 
 
-def cap(s):
-    return s[:1].upper() + s[1:]
-
-
-def plural(w):
-    special = {'fish': 'fish', 'mango': 'mangoes', 'bus': 'buses'}
-    if w in special:
-        return special[w]
-    if re.search(r'[^aeiou]y$', w):
-        return w[:-1] + 'ies'
-    return w + 's'
-
-
-def all_lines():
-    out = ["Hi there! Let's play!", 'Start at the green dot!']
-    for c in ALPHA:
-        out.append(f"Let's trace big letter {c}! {c} is for {CUE[c]}!")
-        out.append(f'Now the small letter {c}!')
-    for n in range(0, 21):
-        out.append(f"Let's trace the number {NUM[n]}!")
-    out += LINE_SAYS
-    for s in SHAPES:
-        out.append(f"Let's trace {'an' if s[0] in 'aeiou' else 'a'} {s}!")
-    for n in range(1, 21):
-        out += [cap(NUM[n]) + '!', 'Yes! ' + cap(NUM[n]) + '!']
-    for t in THINGS:
-        out += [f"Let's count! Tap each {t}!", f'How many {plural(t)} did you count?', cap(t) + '!', 'Yes! ' + cap(t) + '!']
-    out += ["Oops! Let's count again!", 'Draw a line to the same picture!', 'Match the big letter to the small letter!',
-            'Match the number to the dots!', 'What comes next?', 'Hmm, look again!']
-    out += PRAISE
-    seen, uniq = set(), []
-    for t in out:
-        if key(t) not in seen:
+def load_lines():
+    src = args.lines or LINES_URL
+    try:
+        if re.match(r'https?://', src):
+            import urllib.request
+            req = urllib.request.Request(src, headers={'User-Agent': 'tuldok-voice-maker'})
+            with urllib.request.urlopen(req, timeout=60) as r:
+                data = json.loads(r.read().decode('utf-8'))
+        else:
+            with open(src) as fh:
+                data = json.load(fh)
+    except Exception as e:
+        raise SystemExit(f'Could not read the line list from {src}: {e}\n'
+                         'Push the app, wait until the GitHub build finishes, then run this again.')
+    seen, out = set(), []
+    for t in data:
+        if isinstance(t, str) and key(t) and key(t) not in seen:
             seen.add(key(t))
-            uniq.append(t)
-    return uniq
+            out.append(t)
+    print(f'Line list: {len(out)} lines from {src}', flush=True)
+    return out
 
 
 def key(t):  # same rule as vkey() in the app: lowercase, punctuation becomes one space
@@ -223,8 +200,8 @@ def save_mp3(y, sr, path):
 
 # ---------------- run ----------------
 def main():
-    full = all_lines()
-    lines = SAMPLE if args.sample else full
+    full = SAMPLE if args.sample else load_lines()
+    lines = full
     root = '/content/tuldok-sample' if args.sample else args.out
     vdir = os.path.join(root, 'voice')
     os.makedirs(vdir, exist_ok=True)
@@ -237,7 +214,7 @@ def main():
                 todo.append(t)
         elif args.sample or not os.path.exists(p):
             todo.append(t)
-    print(f'{len(full)} lines in the app, {len(todo)} to make now.', flush=True)
+    print(f'{len(full)} lines in the {"sample" if args.sample else "app"}, {len(todo)} to make now.', flush=True)
     if only and not todo:
         print(f'No line contains "{args.only}".')
     gen, label = (load_engine() if todo else (None, 'unchanged'))
@@ -259,7 +236,7 @@ def main():
         for t in SAMPLE:
             print(t)
             display(Audio(os.path.join(vdir, fname(key(t)))))
-        print('Like it? Run the full set:  %run make_voice.py' + (f' --exag {args.exag}' if args.exag != 0.9 else ''))
+        print('Like it? Make the full set (notebook cell 6, or:  %run -i make_voice.py' + (f' --exag {args.exag}' if args.exag != 0.9 else '') + ')')
         return
 
     clips = {key(t): fname(key(t)) for t in full if os.path.exists(os.path.join(vdir, fname(key(t))))}
