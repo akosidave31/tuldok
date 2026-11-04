@@ -4,6 +4,13 @@
     <!-- Only used to load the Google Fonts for titles; the app works offline without it. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Lets the app find the phone's text-to-speech engine (needed on Android 11+). -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"

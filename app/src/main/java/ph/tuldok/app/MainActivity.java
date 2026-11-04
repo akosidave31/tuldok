@@ -17,7 +17,9 @@ import android.print.PrintDocumentAdapter;
 import android.print.PrintDocumentInfo;
 import android.print.PrintManager;
 import android.provider.MediaStore;
+import android.speech.tts.TextToSpeech;
 import android.util.Base64;
+import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -36,11 +38,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Locale;
 
 /**
- * Tuldok: the worksheet maker page (assets/index.html) in a WebView.
- * The page builds each PDF itself, then hands it over in base64 pieces:
- * TuldokAndroid.begin(name), append(piece)..., done("save|a4" / "print|short" / "share|long").
+ * Tuldok: the touch games (assets/index.html) and the printable worksheet maker (assets/print.html) in a WebView.
+ * The pages can call TuldokAndroid.speak(text, "en"|"fil") for the voice, and
+ * begin(name) / append(base64) / done("save|a4" | "print|short" | "share|long") to hand over a PDF.
  */
 public class MainActivity extends Activity {
 
@@ -48,6 +51,8 @@ public class MainActivity extends Activity {
             new PrintAttributes.MediaSize("PH_LONG_BOND", "Long bond 8.5 x 13 in", 8500, 13000);
 
     private WebView web;
+    private TextToSpeech tts;
+    private volatile boolean ttsReady = false;
     private File pendingFile;
     private OutputStream pendingOut;
     private String pendingName = "worksheet.pdf";
@@ -55,13 +60,19 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         web = new WebView(this);
+        web.setLongClickable(false);
+        web.setOnLongClickListener(v -> true);
+        web.setHapticFeedbackEnabled(false);
         setContentView(web);
 
         WebSettings settings = web.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setTextZoom(100);
+        settings.setMediaPlaybackRequiresUserGesture(false);
 
         web.setWebChromeClient(new WebChromeClient());
         web.setWebViewClient(new WebViewClient() {
@@ -79,6 +90,8 @@ public class MainActivity extends Activity {
         });
         web.addJavascriptInterface(new Bridge(), "TuldokAndroid");
 
+        tts = new TextToSpeech(this, status -> ttsReady = (status == TextToSpeech.SUCCESS));
+
         if (savedInstanceState != null) {
             web.restoreState(savedInstanceState);
         } else {
@@ -92,23 +105,49 @@ public class MainActivity extends Activity {
         web.saveState(outState);
     }
 
+    /** Back: printables page goes back to the games; inside the games, the page decides; otherwise leave. */
     @Override
     public void onBackPressed() {
         if (web.canGoBack()) {
             web.goBack();
-        } else {
-            super.onBackPressed();
+            return;
         }
+        web.evaluateJavascript("(window.__tuldokBack && window.__tuldokBack()) ? 'yes' : 'no'", value -> {
+            if (!"\"yes\"".equals(value)) finish();
+        });
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (tts != null) tts.stop();
     }
 
     @Override
     protected void onDestroy() {
+        if (tts != null) tts.shutdown();
         if (web != null) web.destroy();
         super.onDestroy();
     }
 
-    /** Methods the page can call. They run on a background thread, so UI work goes through runOnUiThread. */
+    /** Methods the pages can call. They run on a background thread, so UI work goes through runOnUiThread. */
     public class Bridge {
+
+        @JavascriptInterface
+        public void speak(String text, String lang) {
+            if (tts == null || !ttsReady || text == null || text.isEmpty()) return;
+            int result = tts.setLanguage("fil".equals(lang) ? new Locale("fil", "PH") : Locale.US);
+            if ("fil".equals(lang) && (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED)) {
+                tts.setLanguage(new Locale("tl", "PH"));
+            }
+            tts.setSpeechRate(0.9f);
+            tts.speak(text, TextToSpeech.QUEUE_ADD, null, "tuldok-" + System.nanoTime());
+        }
+
+        @JavascriptInterface
+        public void stopSpeaking() {
+            if (tts != null) tts.stop();
+        }
 
         @JavascriptInterface
         public boolean begin(String name) {
