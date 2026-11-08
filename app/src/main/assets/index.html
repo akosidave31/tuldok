@@ -531,7 +531,8 @@ const ACTS = {
   addUp: { sec: 'numbers', icon: '➕', name: 'Add it up', color: '#ef476f', mode: 'quiz', make: makeAddUp, ages: ['prek', 'kinder'] },
   colors: { sec: 'colors', icon: '🎈', name: 'Colors', color: '#e63946', mode: 'quiz', make: makeColor },
   findShape: { sec: 'colors', icon: '🔷', name: 'Find the shape', color: '#1e6fd9', mode: 'quiz', make: makeShape },
-  coloring: { sec: 'colors', icon: '🖍️', name: 'Coloring', color: '#ff70a6', mode: 'paint' },
+  coloring: { sec: 'colors', icon: '🖍️', name: 'Coloring', color: '#ff70a6', mode: 'paint', pages: 'pictures' },
+  trucks: { sec: 'colors', icon: '🚧', name: 'Construction', color: '#f4a300', mode: 'paint', pages: 'build' },
   findIt: { sec: 'world', icon: '👂', name: 'Listen and find', color: '#06a77d', mode: 'quiz', make: makeFindIt },
   animalSounds: { sec: 'world', icon: '🐮', name: 'Animal sounds', color: '#8b5a2b', mode: 'quiz', make: makeAnimalSound },
   feelings: { sec: 'world', icon: '😊', name: 'Feelings', color: '#f78c1f', mode: 'quiz', make: makeFeeling },
@@ -1470,7 +1471,8 @@ function memFlip(c) {
 const PAINT = ['#e63946', '#ff8c1a', '#ffd23f', '#8fd14f', '#2bb24c', '#5bc0eb', '#1e6fd9', '#8e5cd9', '#ff70a6', '#8b5a2b', '#222222', '#ffffff'];
 const PT = { idx: 0, color: PAINT[0], finished: false };
 function loadPage(i) {
-  const pages = C.PAGES, n = pages.length;
+  const set = ACTS[curAct].pages || 'pictures';
+  const pages = C.PAGES.filter(function (p) { return p.set === set; }), n = pages.length;
   gameToken++;
   PT.idx = ((i % n) + n) % n;
   PT.finished = false;

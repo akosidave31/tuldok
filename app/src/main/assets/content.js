@@ -105,8 +105,9 @@ window.TULDOK_CONTENT = (function () {
     return p.join(' ');
   }
   function ground(y) { return '<path class="r" d="M3 ' + y + ' H397 V277 A20 20 0 0 1 377 297 H23 A20 20 0 0 1 3 277 Z"/>'; }
-  function page(title, body) {
-    return { title: title, svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect class="r" x="3" y="3" width="394" height="294" rx="20"/>' + body + '</svg>' };
+  /* set: which coloring book the page belongs to ('pictures' = Coloring tile, 'build' = Construction tile) */
+  function page(title, body, set) {
+    return { title: title, set: set || 'pictures', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect class="r" x="3" y="3" width="394" height="294" rx="20"/>' + body + '</svg>' };
   }
   const PAGES = [
     page('Apple', ground(250) +
@@ -208,7 +209,83 @@ window.TULDOK_CONTENT = (function () {
       '<path class="r" d="M187 180 H213 L200 194 Z"/>' +
       '<path class="d" d="M200 194 V205 M200 205 Q186 219 172 207 M200 205 Q214 219 228 207"/>' +
       '<path class="d" d="M152 192 L84 180 M152 202 L82 208 M248 192 L316 180 M248 202 L318 208"/>' +
-      '<path class="r" d="M200 252 L168 236 V268 Z"/><path class="r" d="M200 252 L232 236 V268 Z"/><circle class="r" cx="200" cy="252" r="9"/>')
+      '<path class="r" d="M200 252 L168 236 V268 Z"/><path class="r" d="M200 252 L232 236 V268 Z"/><circle class="r" cx="200" cy="252" r="9"/>'),
+
+    /* construction vehicles */
+    page('Excavator', ground(240) +
+      '<path class="r" d="M300 240 Q326 194 366 210 Q390 222 394 240 Z"/>' +
+      '<circle class="r" cx="60" cy="56" r="26"/>' +
+      '<path class="r" d="M60 216 H220 A22 22 0 0 1 220 260 H60 A22 22 0 0 1 60 216 Z"/>' +
+      '<circle class="r" cx="82" cy="238" r="13"/><circle class="r" cx="140" cy="238" r="13"/><circle class="r" cx="198" cy="238" r="13"/>' +
+      '<rect class="r" x="70" y="160" width="140" height="56" rx="6"/>' +
+      '<rect class="r" x="186" y="126" width="8" height="34"/>' +
+      '<path class="r" d="M80 160 V100 Q80 92 88 92 H140 L160 160 Z"/>' +
+      '<path class="r" d="M92 104 H134 L148 152 H92 Z"/>' +
+      '<polygon class="r" points="196,176 222,152 300,70 316,86 238,176"/>' +
+      '<polygon class="r" points="300,70 318,62 352,150 334,158"/>' +
+      '<path class="r" d="M326 150 L362 146 Q372 182 340 194 Q316 188 326 150 Z"/>' +
+      '<circle class="r" cx="309" cy="76" r="8"/><circle class="r" cx="343" cy="154" r="7"/>', 'build'),
+    page('Dump truck', ground(236) +
+      '<path class="r" d="M40 64 C38 48 58 40 70 50 C76 34 102 34 106 52 C122 50 128 70 114 76 H46 C34 76 32 68 40 64 Z"/>' +
+      '<circle class="r" cx="200" cy="88" r="20"/><circle class="r" cx="238" cy="80" r="22"/><circle class="r" cx="278" cy="86" r="20"/><circle class="r" cx="316" cy="90" r="18"/>' +
+      '<path class="r" d="M150 96 H372 L356 176 H160 Z"/>' +
+      '<path class="d" d="M190 120 H330 M196 148 H326"/>' +
+      '<rect class="r" x="40" y="176" width="330" height="22" rx="6"/>' +
+      '<path class="r" d="M40 176 V112 Q40 100 52 100 H112 Q124 100 128 112 L140 176 Z"/>' +
+      '<path class="r" d="M56 112 H108 L118 146 H56 Z"/>' +
+      '<circle class="r" cx="48" cy="164" r="6"/>' +
+      '<circle class="r" cx="92" cy="208" r="28"/><circle class="r" cx="244" cy="208" r="28"/><circle class="r" cx="318" cy="208" r="28"/>' +
+      '<circle class="r" cx="92" cy="208" r="10"/><circle class="r" cx="244" cy="208" r="10"/><circle class="r" cx="318" cy="208" r="10"/>', 'build'),
+    page('Bulldozer', ground(240) +
+      '<circle class="r" cx="340" cy="50" r="26"/>' +
+      '<path class="r" d="M30 148 Q20 198 34 246 H72 V148 Z"/>' +
+      '<rect class="r" x="72" y="194" width="40" height="14"/>' +
+      '<path class="r" d="M112 210 H330 A24 24 0 0 1 330 258 H112 A24 24 0 0 1 112 210 Z"/>' +
+      '<circle class="r" cx="134" cy="234" r="15"/><circle class="r" cx="192" cy="234" r="15"/><circle class="r" cx="250" cy="234" r="15"/><circle class="r" cx="308" cy="234" r="15"/>' +
+      '<rect class="r" x="104" y="150" width="204" height="60" rx="6"/>' +
+      '<path class="r" d="M200 150 V86 Q200 78 208 78 H282 Q290 78 290 86 V150 Z"/>' +
+      '<rect class="r" x="212" y="90" width="30" height="40" rx="3"/><rect class="r" x="250" y="90" width="30" height="40" rx="3"/>' +
+      '<rect class="r" x="140" y="116" width="10" height="34"/>' +
+      '<circle class="r" cx="146" cy="100" r="8"/><circle class="r" cx="158" cy="82" r="11"/>', 'build'),
+    page('Crane', ground(250) +
+      '<rect class="r" x="120" y="50" width="30" height="196"/>' +
+      '<path class="d" d="M120 72 L150 92 L120 112 L150 132 L120 152 L150 172 L120 192 L150 212 L120 232"/>' +
+      '<rect class="r" x="40" y="40" width="322" height="22"/>' +
+      '<path class="d" d="M150 62 L170 40 L190 62 L210 40 L230 62 L250 40 L270 62 L290 40 L310 62 L330 40 L350 62"/>' +
+      '<rect class="r" x="44" y="62" width="52" height="30"/>' +
+      '<rect class="r" x="150" y="62" width="40" height="34" rx="4"/><rect class="r" x="158" y="68" width="24" height="16" rx="2"/>' +
+      '<rect class="r" x="96" y="236" width="78" height="16" rx="3"/>' +
+      '<path class="r" d="M206 120 C204 104 222 98 232 106 C238 94 260 94 264 108 C278 108 282 124 270 128 H212 C202 128 200 122 206 120 Z"/>' +
+      '<path class="d" d="M320 62 V168"/>' +
+      '<rect class="r" x="310" y="168" width="20" height="14" rx="3"/>' +
+      '<path class="d" d="M320 182 L292 210 M320 182 L348 210"/>' +
+      '<rect class="r" x="290" y="210" width="60" height="40" rx="2"/>' +
+      '<path class="d" d="M290 230 H350 M320 210 V250"/>', 'build'),
+    page('Cement mixer', ground(236) +
+      '<circle class="r" cx="350" cy="48" r="24"/>' +
+      '<ellipse class="r" cx="170" cy="126" rx="110" ry="50" transform="rotate(12 170 126)"/>' +
+      '<path class="d" d="M118 80 Q132 117 118 154 M170 88 Q184 126 170 164 M222 99 Q236 136 222 172"/>' +
+      '<polygon class="r" points="92,176 116,150 140,176"/>' +
+      '<rect class="r" x="268" y="128" width="14" height="48"/>' +
+      '<rect class="r" x="40" y="176" width="332" height="22" rx="6"/>' +
+      '<path class="r" d="M300 176 V112 Q300 100 312 100 H350 Q366 100 368 116 L372 176 Z"/>' +
+      '<path class="r" d="M312 112 H350 L358 146 H312 Z"/>' +
+      '<path class="r" d="M60 134 L30 170 L42 176 L72 142 Z"/>' +
+      '<circle class="r" cx="90" cy="208" r="26"/><circle class="r" cx="150" cy="208" r="26"/><circle class="r" cx="326" cy="208" r="26"/>' +
+      '<circle class="r" cx="90" cy="208" r="9"/><circle class="r" cx="150" cy="208" r="9"/><circle class="r" cx="326" cy="208" r="9"/>', 'build'),
+    page('Road roller', ground(240) +
+      '<path class="d" d="M24 270 H64 M104 270 H144 M184 270 H224 M264 270 H304 M344 270 H376"/>' +
+      '<circle class="r" cx="56" cy="56" r="24"/>' +
+      '<rect class="r" x="200" y="54" width="120" height="14" rx="6"/>' +
+      '<rect class="r" x="206" y="68" width="8" height="46"/><rect class="r" x="306" y="68" width="8" height="46"/>' +
+      '<rect class="r" x="170" y="84" width="10" height="30"/>' +
+      '<path class="r" d="M150 200 V124 Q150 114 160 114 H330 Q340 114 340 124 V200 Z"/>' +
+      '<rect class="r" x="236" y="92" width="44" height="22" rx="6"/>' +
+      '<path class="d" d="M228 112 L216 92"/><ellipse class="r" cx="214" cy="88" rx="10" ry="4"/>' +
+      '<rect class="r" x="56" y="138" width="92" height="22" rx="6"/>' +
+      '<rect class="r" x="96" y="160" width="10" height="14"/>' +
+      '<circle class="r" cx="100" cy="204" r="40"/><circle class="r" cx="100" cy="204" r="14"/>' +
+      '<circle class="r" cx="298" cy="206" r="34"/><circle class="r" cx="298" cy="206" r="12"/>', 'build')
   ];
 
   /* ---------- plural for the counting game ---------- */

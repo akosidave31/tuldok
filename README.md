@@ -20,6 +20,7 @@ Touch-screen learning games for Nursery, Pre-K and Kinder, plus a printable work
 | 🎨 Colors and shapes | Colors | all | "Find the red balloon!" (4, 8 or 10 colors by age) |
 | | Find the shape | all | "Find the triangle!" Shapes come in mixed colors so color is no clue |
 | | Coloring | all | Picks a crayon and taps areas to paint 10 pictures |
+| | Construction | all | The same coloring book with 6 construction vehicles: excavator, dump truck, bulldozer, crane, cement mixer, road roller |
 | 🌏 My world | Listen and find | all | "Where is the carabao?" Animals, fruits, food, vehicles, clothes, body, things |
 | | Animal sounds | all | "Who says moo?" |
 | | Feelings | all | "Find the sad face!" |
