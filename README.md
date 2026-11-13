@@ -24,7 +24,7 @@ Touch-screen learning games for Nursery, Pre-K and Kinder, plus a printable work
 | 🌏 My world | Listen and find | all | "Where is the carabao?" Animals, fruits, food, vehicles, clothes, body, things |
 | | Animal sounds | all | "Who says moo?" |
 | | Feelings | all | "Find the sad face!" |
-| 🧩 Think and play | Match, What's next? | all | Draws lines between pairs; finishes patterns |
+| 🧩  | Match, What's next? | all | Draws lines between pairs; finishes patterns |
 | | Memory | all | Flips cards to find pairs (3, 4 or 6 pairs by age) |
 | | Odd one out | Pre-K, Kinder | "Which one does not belong?" |
 

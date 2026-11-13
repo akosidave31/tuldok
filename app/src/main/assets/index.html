@@ -515,31 +515,21 @@ function shapeItems() {
 /* Home screen sections, and every activity. ages = which age groups see it (default: all).
    mode: trace (finger tracing), count, match, pattern, quiz (tap the answer; make() builds one question),
    memory (flip cards), paint (coloring book). */
-const SECTIONS = [['trace', '✏️ Trace'], ['words', '🔤 Letters and words'], ['numbers', '🔢 Numbers'], ['colors', '🎨 Colors and shapes'], ['world', '🌏 My world'], ['think', '🧩 Think and play']];
+const SECTIONS = [['trace', '✏️ Trace'], ['words', '🔤 Letters and words'], ['numbers', '🔢 Numbers'], ['colors', '🎨 Colors and shapes'], ['world', '🌏 My world']];
 const ACTS = {
   letters: { sec: 'trace', icon: 'Aa', name: 'Letters', color: '#ef476f', mode: 'trace', items: letterItems },
   numbers: { sec: 'trace', icon: '123', name: 'Numbers', color: '#f78c1f', mode: 'trace', items: numberItems },
   lines: { sec: 'trace', icon: '〰️', name: 'Lines', color: '#118ab2', mode: 'trace', items: lineItems },
   shapes: { sec: 'trace', icon: '🔺', name: 'Shapes', color: '#8e5cd9', mode: 'trace', items: shapeItems },
-  findLetter: { sec: 'words', icon: '🔤', name: 'Find the letter', color: '#ef476f', mode: 'quiz', make: makeFindLetter },
-  firstSound: { sec: 'words', icon: 'B🐝', name: 'First sounds', color: '#e09f00', mode: 'quiz', make: makeFirstSound, ages: ['prek', 'kinder'] },
-  rhyme: { sec: 'words', icon: '🐱🎩', name: 'Rhymes', color: '#8e5cd9', mode: 'quiz', make: makeRhyme, ages: ['prek', 'kinder'] },
   readWord: { sec: 'words', icon: 'cat', name: 'First words', color: '#118ab2', mode: 'quiz', make: makeReadWord, ages: ['kinder'] },
   count: { sec: 'numbers', icon: '🍎', name: 'Count', color: '#06a77d', mode: 'count' },
   findNumber: { sec: 'numbers', icon: '🔢', name: 'Find the number', color: '#f78c1f', mode: 'quiz', make: makeFindNumber },
-  moreLess: { sec: 'numbers', icon: '⚖️', name: 'More or fewer', color: '#2a9d8f', mode: 'quiz', make: makeMoreLess },
-  addUp: { sec: 'numbers', icon: '➕', name: 'Add it up', color: '#ef476f', mode: 'quiz', make: makeAddUp, ages: ['prek', 'kinder'] },
   colors: { sec: 'colors', icon: '🎈', name: 'Colors', color: '#e63946', mode: 'quiz', make: makeColor },
   findShape: { sec: 'colors', icon: '🔷', name: 'Find the shape', color: '#1e6fd9', mode: 'quiz', make: makeShape },
   coloring: { sec: 'colors', icon: '🖍️', name: 'Coloring', color: '#ff70a6', mode: 'paint', pages: 'pictures' },
   trucks: { sec: 'colors', icon: '🚧', name: 'Construction', color: '#f4a300', mode: 'paint', pages: 'build' },
-  findIt: { sec: 'world', icon: '👂', name: 'Listen and find', color: '#06a77d', mode: 'quiz', make: makeFindIt },
   animalSounds: { sec: 'world', icon: '🐮', name: 'Animal sounds', color: '#8b5a2b', mode: 'quiz', make: makeAnimalSound },
   feelings: { sec: 'world', icon: '😊', name: 'Feelings', color: '#f78c1f', mode: 'quiz', make: makeFeeling },
-  match: { sec: 'think', icon: '🧩', name: 'Match', color: '#e09f00', mode: 'match' },
-  pattern: { sec: 'think', icon: '🔁', name: "What's next?", color: '#2a9d8f', mode: 'pattern' },
-  memory: { sec: 'think', icon: '🃏', name: 'Memory', color: '#5aa9e6', mode: 'memory', rounds: 2 },
-  oddOne: { sec: 'think', icon: '🤔', name: 'Odd one out', color: '#8e5cd9', mode: 'quiz', make: makeOddOne, ages: ['prek', 'kinder'] },
 };
 function visibleActs() { return Object.keys(ACTS).filter(function (k) { const a = ACTS[k]; return !a.ages || a.ages.indexOf(S.age) >= 0; }); }
 
