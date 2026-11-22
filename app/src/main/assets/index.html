@@ -168,6 +168,8 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .seg button[aria-pressed="true"] { background: var(--go); border-color: var(--go); color: #fff; }
 .wide { border-radius: 14px; padding: 14px; font-size: 17px; background: #eef3f7; text-align: left; }
 .note { margin: 0; color: var(--muted); font-size: 14px; }
+.heard button { text-align: left; font-size: 15px; padding: 8px 14px; }
+.flat-list { width: 100%; box-sizing: border-box; border: 2px solid var(--line); border-radius: 12px; padding: 10px; font: inherit; font-size: 15px; resize: none; }
 .done-btn { justify-self: end; background: var(--go); color: #fff; border-radius: 999px; padding: 12px 24px; font-size: 17px; font-weight: 700; }
 .err { position: fixed; left: 10px; right: 10px; bottom: 10px; z-index: 20; background: #fff0f0; color: #a12c28; border-radius: 12px; padding: 10px 14px; font-size: 14px; user-select: text; }
 :focus-visible { outline: 3px solid #9bbfe6; outline-offset: 2px; }
@@ -232,9 +234,15 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
     <div class="row"><span class="lab">Sounds</span><div id="setSound" class="seg"></div></div>
     <div class="row"><span class="lab">Voice (reads instructions aloud)</span><div id="setVoice" class="seg"></div></div>
     <div class="row"><span class="lab">Voice style</span><div id="setVoiceStyle" class="seg"></div></div>
+    <div class="row"><span class="lab">Voice check: tap each line that sounds flat (🤖 = no recorded clip yet, so the tablet voice reads it)</span>
+      <div id="heard" class="seg heard"></div>
+      <textarea id="flatList" class="flat-list" rows="3" readonly placeholder="Lines you mark show up here"></textarea>
+      <div class="seg"><button id="copyFlat" type="button">Copy list</button><button id="clearFlat" type="button">Clear list</button></div>
+      <p class="note">Paste the list into ONLY in step 8 of the Colab voice maker: it records 3 new takes of each line and keeps the liveliest.</p>
+    </div>
     <button id="toPrint" class="wide" type="button">🖨️ Printable worksheets (PDF)</button>
     <button id="resetStars" class="wide" type="button">Reset stars</button>
-    <p class="note">The tracing games check that children start at the green dot and follow the arrow, the way letters are taught in class. Nursery gets wider paths and big letters only. Each age group sees the games that suit it: First sounds, Rhymes and Add it up start at Pre-K; First words starts at Kinder. After two wrong taps, the right answer glows.</p>
+    <p class="note">The tracing games check that children start at the green dot and follow the arrow, the way letters are taught in class. Nursery gets wider paths and big letters only. Each age group sees the games that suit it: First words starts at Kinder. After two wrong taps, the right answer glows.</p>
     <p id="progress" class="note"></p>
     <p id="version" class="note"></p>
     <button id="closeGrown" class="done-btn" type="button">Done</button>
@@ -334,6 +342,7 @@ function sayParts(parts) {
   parts = (parts || []).filter(Boolean);
   if (window.__tuldokTestLog) Array.prototype.push.apply(window.__tuldokTestLog, parts);
   if (!S.voice || !parts.length) return;
+  if ($('grown').hidden) noteHeard(parts);
   stopVoice();
   if (S.voiceStyle === 'jolly' && CLIPS) {
     const files = parts.map(function (p) { return CLIPS[vkey(p)]; });
@@ -372,6 +381,35 @@ function deviceSay(text) {
     u.lang = 'en-US'; u.rate = v.rate; u.pitch = v.pitch;
     window.speechSynthesis.speak(u);
   } catch (e) { /* voice is optional */ }
+}
+/* Voice check (grown-ups menu): the last lines spoken, so a grown-up can mark the flat ones for the Colab voice maker. */
+const heard = [];
+let flatLines = load('flat', []);
+if (!Array.isArray(flatLines)) flatLines = [];
+function noteHeard(parts) {
+  parts.forEach(function (p) { const i = heard.indexOf(p); if (i >= 0) heard.splice(i, 1); heard.unshift(p); });
+  if (heard.length > 12) heard.length = 12;
+}
+function renderVoiceCheck() {
+  const box = $('heard');
+  box.textContent = '';
+  const shown = heard.concat(flatLines.filter(function (t) { return heard.indexOf(t) < 0; }));
+  if (!shown.length) box.appendChild(el('span', 'note', 'Play a game for a minute, then come back: the lines it said show up here.'));
+  shown.forEach(function (t) {
+    const b = el('button', '', (CLIPS && CLIPS[vkey(t)] ? '' : '🤖 ') + t);
+    b.type = 'button';
+    b.setAttribute('aria-pressed', String(flatLines.indexOf(t) >= 0));
+    b.addEventListener('click', function () {
+      const i = flatLines.indexOf(t);
+      if (i >= 0) flatLines.splice(i, 1); else { flatLines.push(t); say(t); }
+      save('flat', flatLines);
+      b.setAttribute('aria-pressed', String(i < 0));
+      $('flatList').value = flatLines.join(' | ');
+    });
+    box.appendChild(b);
+  });
+  $('flatList').value = flatLines.join(' | ');
+  $('copyFlat').textContent = 'Copy list';
 }
 function stopVoice() {
   clipGen++;
@@ -1655,12 +1693,21 @@ function openGrown() {
   const A = window.TuldokAndroid;
   let ver = 'web preview';
   try { if (A && typeof A.version === 'function') ver = 'app version ' + A.version(); } catch (e) { /* ignore */ }
+  renderVoiceCheck();
   $('progress').textContent = progressText();
   $('version').textContent = 'Tuldok ' + ver + ' · ' + voiceText();
   $('grown').hidden = false;
 }
 function closeGrown() { $('grown').hidden = true; buildTiles(); }
 $('closeGrown').addEventListener('click', closeGrown);
+$('copyFlat').addEventListener('click', function () {
+  const ta = $('flatList');
+  let ok = false;
+  try { ta.focus(); ta.select(); ok = document.execCommand('copy'); } catch (e) { /* try the other way */ }
+  if (!ok && navigator.clipboard) { navigator.clipboard.writeText(ta.value).then(function () { $('copyFlat').textContent = 'Copied'; }, function () { $('copyFlat').textContent = 'Long-press the box to copy'; }); return; }
+  $('copyFlat').textContent = ok ? 'Copied' : 'Long-press the box to copy';
+});
+$('clearFlat').addEventListener('click', function () { flatLines = []; save('flat', flatLines); renderVoiceCheck(); });
 $('toPrint').addEventListener('click', function () { location.href = 'print.html'; });
 $('resetStars').addEventListener('click', function () {
   const b = $('resetStars');

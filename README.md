@@ -32,7 +32,7 @@ A cheerful recorded voice reads every instruction, wrong answers get a gentle "T
 and after two misses the right answer glows (errorless learning). Finished games earn stars.
 
 **For grown-ups:** press and hold the gear on the home screen to change age group, sounds and voice, see each game's stars,
-check how many spoken lines have voice clips, or open the printable worksheet maker (`print.html`), which can Save, Print or Share PDFs.
+check how many spoken lines have voice clips, mark lines that sound flat (Voice check) for the Colab voice maker, or open the printable worksheet maker (`print.html`), which can Save, Print or Share PDFs.
 
 ## Get the APK
 
